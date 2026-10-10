@@ -8,6 +8,8 @@ Les sections historiques ci-dessous décrivent des étapes successives, pas des 
 
 La suite complète, la restauration après désinstallation sur le code final, les grandes tailles/polices et l’APK release final restent à vérifier dans cette continuation. Aucun push/tag/publication autorisé ; sauvegarde indépendante de la clé non confirmée. L’ancien APK dans `artifacts` n’est pas une livraison de la source actuelle.
 
+Première réexécution globale : scénario complet avec annulation caméra, restauration vers base vide, quatre tests documents/rapports, recréation et erreur d’initialisation réussis. Credential réussie isolément mais en échec dans cette suite : fichier non retrouvé après un changement de dossier du sélecteur. Une course avec la mise à jour de la fenêtre native est suspectée, sans attribution définitive. Synchronisation explicite `UiAutomation.waitForIdle` ajoutée autour des touches externes ; nouvelle exécution requise. Ne pas annoncer la suite entière réussie.
+
 ## Plan
 
 1. Inspecter dépôt et environnement (fait : dépôt distant vide, JDK/SDK disponibles).

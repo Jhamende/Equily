@@ -4,6 +4,8 @@ Equily traite les informations saisies volontairement sur le téléphone : alias
 
 Les imports via le sélecteur système peuvent provenir d’un fournisseur de documents tiers, éventuellement distant, choisi par l’utilisateur. Les exports vont au fournisseur choisi. Ouvrir une pièce jointe donne au lecteur externe choisi un accès temporaire à ce fichier. Ces actions explicites ne sont pas une synchronisation Equily.
 
+Les rapports PDF/CSV sont lisibles et non chiffrés ; ce ne sont pas des sauvegardes chiffrées. Vérifier leur contenu, emplacement et destinataire avant partage. Un fournisseur distant peut conserver une copie selon ses propres règles, même si Equily n’a pas de permission réseau.
+
 Les données actives restent dans le stockage privé Android. L’application désactive Android Auto Backup. Une désinstallation sans sauvegarde peut faire perdre le dossier. Une sauvegarde externe reste sous la responsabilité de l’utilisateur : conserver une phrase secrète robuste séparément et tenir compte des copies créées chez les fournisseurs de fichiers.
 
 Les documents peuvent contenir des données personnelles sensibles relatives à d’autres personnes. Limiter les détails aux besoins du suivi, éviter les identifiants officiels inutiles, protéger l’appareil, vérifier les destinataires avant d’exporter et définir une durée de conservation appropriée. Les corrections sont conservées dans l’audit ; retirer une pièce supprime sa référence et son fichier si aucune autre référence ne l’utilise. Les scans non enregistrés sont nettoyés à l’abandon et au redémarrage. Les fichiers caméra sont effacés au retour de la capture ; les captures interrompues sont retirées au démarrage après 24 heures. Aucun effacement cryptographique individuel n’est promis.

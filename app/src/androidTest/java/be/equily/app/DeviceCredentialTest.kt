@@ -39,27 +39,36 @@ class DeviceCredentialTest {
         assertTrue(entry.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_SET_TEXT, android.os.Bundle().apply { putCharSequence(android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "246824") }))
         key(KeyEvent.KEYCODE_ENTER)
     }
-    private fun nativeNode(label: String): android.view.accessibility.AccessibilityNodeInfo? {
+    private fun nativeNode(label: String, directoryEntry: Boolean = false): android.view.accessibility.AccessibilityNodeInfo? {
         val root = instrumentation.uiAutomation.rootInActiveWindow ?: return null
         val pending = ArrayDeque<android.view.accessibility.AccessibilityNodeInfo>()
         pending.add(root)
         while (pending.isNotEmpty()) {
             val node = pending.removeFirst()
-            if (node.text?.toString() == label || node.contentDescription?.toString() == label) return node
+            if (node.text?.toString() == label || node.contentDescription?.toString() == label) {
+                if (!directoryEntry) return node
+                var ancestor = node.parent
+                while (ancestor != null) {
+                    if (ancestor.viewIdResourceName == "com.android.documentsui:id/dir_list") return node
+                    ancestor = ancestor.parent
+                }
+            }
             repeat(node.childCount) { index -> node.getChild(index)?.let(pending::add) }
         }
         return null
     }
-    private fun nativeClick(label: String) {
-        compose.waitUntil(60000) { nativeNode(label) != null }
+    private fun nativeClick(label: String, directoryEntry: Boolean = false) {
+        instrumentation.uiAutomation.waitForIdle(500, 30000)
+        compose.waitUntil(60000) { nativeNode(label, directoryEntry) != null }
         val bounds = android.graphics.Rect()
-        requireNotNull(nativeNode(label)).getBoundsInScreen(bounds)
+        requireNotNull(nativeNode(label, directoryEntry)).getBoundsInScreen(bounds)
         assertFalse(bounds.isEmpty)
         val time = SystemClock.uptimeMillis()
         listOf(android.view.MotionEvent.ACTION_DOWN, android.view.MotionEvent.ACTION_UP).forEachIndexed { index, action ->
             val event = android.view.MotionEvent.obtain(time, time + index * 20, action, bounds.exactCenterX(), bounds.exactCenterY(), 0).apply { source = android.view.InputDevice.SOURCE_TOUCHSCREEN }
             try { assertTrue(instrumentation.uiAutomation.injectInputEvent(event, true)) } finally { event.recycle() }
         }
+        instrumentation.uiAutomation.waitForIdle(500, 30000)
     }
 
     @Test fun realAndroidCredentialCancellationAndReturnKeepDossierPrivate() {
@@ -106,8 +115,8 @@ class DeviceCredentialTest {
                 if (nativeNode("Show internal storage") != null) nativeClick("Show internal storage") else key(KeyEvent.KEYCODE_BACK)
                 nativeClick("Show roots")
                 nativeClick(android.os.Build.MODEL)
-                nativeClick("Download")
-                nativeClick(file.name)
+                nativeClick("Download", directoryEntry = true)
+                nativeClick(file.name, directoryEntry = true)
                 compose.waitUntil(180000) { model.scanCandidate != null && !model.busy.value }
                 assertTrue(model.locked.value)
                 compose.onNodeWithText("Vérifier la facture").assertDoesNotExist()
