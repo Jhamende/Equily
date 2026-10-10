@@ -64,7 +64,7 @@ fun EquilyApp(model: EquilyModel, unlock: () -> Unit, canLock: () -> Boolean) {
     val base = LocalContext.current
     val configuration = LocalConfiguration.current
     val localizedConfiguration = remember(configuration, preferences.language) { Configuration(configuration).apply { setLocale(Locale.forLanguageTag(preferences.language)) } }
-    val localized = remember(base, localizedConfiguration) { base.createConfigurationContext(localizedConfiguration) }
+    val localized = remember(base, localizedConfiguration) { android.view.ContextThemeWrapper(base, R.style.Theme_Equily).apply { applyOverrideConfiguration(localizedConfiguration) } }
     val dark = preferences.theme == "dark" || (preferences.theme == "system" && isSystemInDarkTheme())
     val colors = if (dark) darkColorScheme(primary = Color(0xFF71E0C6), secondary = Color(0xFFB5C2EA), background = Color(0xFF10172A), surface = Color(0xFF19233B))
     else lightColorScheme(primary = Color(0xFF16213E), secondary = Color(0xFF176C5C), background = Color(0xFFF4F6FA), surface = Color.White, primaryContainer = Color(0xFFD1F5EB))

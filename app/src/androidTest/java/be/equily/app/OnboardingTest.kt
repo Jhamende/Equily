@@ -22,5 +22,11 @@ class OnboardingTest {
         compose.onNodeWithText("Enregistrer").performScrollTo().performClick()
         compose.waitUntil(30000) { compose.onAllNodesWithText("Crédit hypothécaire").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Crédit hypothécaire").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Scanner une facture").performScrollTo().performClick()
+        compose.waitUntil(30000) { compose.onAllNodesWithText("Importer image / PDF").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithContentDescription("Retour").performClick()
+        compose.onNodeWithText("Réglages").performClick()
+        compose.onNodeWithText("Sauvegarde et restauration").performScrollTo().performClick()
+        compose.waitUntil(30000) { compose.onAllNodesWithText("Créer une sauvegarde").fetchSemanticsNodes().isNotEmpty() }
     }
 }

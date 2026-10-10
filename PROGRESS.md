@@ -4,7 +4,7 @@
 
 1. Inspecter dépôt et environnement (fait : dépôt distant vide, JDK/SDK disponibles).
 2. Implémenter domaine exact et persistance transactionnelle (fait, tests purs exécutés).
-3. Implémenter interfaces locales, OCR, rapports et sauvegarde (code présent ; validation Android en cours).
+3. Implémenter interfaces locales, OCR, rapports et sauvegarde (code présent ; tests ciblés Android réussis, acceptation complète restante).
 4. Vérifier intégration, corriger les écarts et éprouver le scénario complet.
 5. Signature dédiée, CI, vérification d’APK.
 6. Commit local reproductible ; push/tag/publication seulement avec autorisation et critères satisfaits.
@@ -17,6 +17,7 @@
 - Trois tests d’intégration Android exécutés et réussis : sauvegarde complète vers base/répertoire vierges avec pièce jointe et rejet d’altération ; règles datées et rejet transactionnel de surpaiement ; OCR embarqué sur facture école synthétique 125 €. Ce n’est pas une restauration après désinstallation réelle ni un test de facture photographiée réelle.
 - Dernière suite Android complète : **4 tests réussis**, dont test Compose onboarding → ajout d’une hypothèque 1070 €, durée totale 269 secondes sur émulateur sans accélération. Exécution directe avec AndroidJUnitRunner via ADB, pas de résultat inventé de connectedDebugAndroidTest/CI distante. Première tentative en échec ; boîte ANR System UI fermée, Compose mis à jour et notification de réussite recouvrant le bouton d’ajout retirée après navigation.
 - Aucun commit poussé, aucun tag, aucune release publique.
+- Après le correctif du contexte Android localisé, le test Compose a été réexécuté et réussi (92 secondes) : onboarding, hypothèque 1070 €, ouverture du scan et de la sauvegarde. Le contexte conserve désormais son Activity pour les lanceurs de sélection/import/export ; cela ne valide pas encore les flux complets de fichiers ni leur interaction avec le verrouillage.
 
 ## Écarts à résoudre avant release
 
