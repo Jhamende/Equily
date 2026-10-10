@@ -30,5 +30,8 @@ grep -q 'Pin set to' <<< "$pin_result"
 pin_created=true
 timeout 3600 adb -s "$serial" shell am instrument -w -r -e equilySyntheticPin 246824 be.equily.app.test/androidx.test.runner.AndroidJUnitRunner | tee "$log"
 grep -Eq '^OK \([0-9]+ tests?\)' "$log"
-! grep -Eq 'FAILURES!!!|INSTRUMENTATION_STATUS_CODE: -(2|3|4)' "$log"
+if grep -Eq 'FAILURES!!!|INSTRUMENTATION_STATUS_CODE: -(2|3|4)' "$log"; then
+    echo "A failed or skipped instrumentation test prevents acceptance." >&2
+    exit 1
+fi
 echo "Full API 26 suite verified, including actual credential and SAF return. Log: $log"

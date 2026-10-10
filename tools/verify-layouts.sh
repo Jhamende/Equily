@@ -34,7 +34,10 @@ run_layout() {
     adb -s "$serial" shell settings put system font_scale "$font"
     timeout 900 adb -s "$serial" shell am instrument -w -r -e class be.equily.app.VisualLayoutTest be.equily.app.test/androidx.test.runner.AndroidJUnitRunner | tee "$log"
     grep -q '^OK (1 test)' "$log"
-    ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_STATUS_CODE: -(2|3|4)' "$log"
+    if grep -Eq 'FAILURES!!!|INSTRUMENTATION_STATUS_CODE: -(2|3|4)' "$log"; then
+        echo "A failed or skipped layout test prevents acceptance." >&2
+        exit 1
+    fi
     mkdir -p "$destination"
     for language in fr nl en; do
         for theme in light dark; do

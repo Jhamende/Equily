@@ -25,7 +25,10 @@ test_class="be.equily.app.CleanInstallationBackupTest"
 run_phase() {
     timeout 600 adb -s "$serial" shell am instrument -w -r -e class "$test_class" -e equilyBackupPhase "$1" "$runner" | tee "$temporary/$1.txt"
     grep -q 'OK (1 test)' "$temporary/$1.txt"
-    ! grep -q 'FAILURES!!!' "$temporary/$1.txt"
+    if grep -Eq 'FAILURES!!!|INSTRUMENTATION_STATUS_CODE: -(2|3|4)' "$temporary/$1.txt"; then
+        echo "A failed or skipped backup phase prevents acceptance." >&2
+        exit 1
+    fi
 }
 echo "Wiping only be.equily.app on dedicated test AVD $avd ($serial)."
 if adb -s "$serial" shell pm path be.equily.app | grep -q 'package:'; then adb -s "$serial" uninstall be.equily.app; fi
