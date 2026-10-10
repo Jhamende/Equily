@@ -14,7 +14,10 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+          log-accepted-android-sdk-licenses: false
       - run: |
           test -f ACCEPTANCE.md
           grep -qx 'State: accepted' ACCEPTANCE.md
@@ -40,7 +43,10 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+          log-accepted-android-sdk-licenses: false
       - name: Build with dedicated release key
         env:
           EQUILY_KEYSTORE_BASE64: ${{ secrets.EQUILY_KEYSTORE_BASE64 }}
