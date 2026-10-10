@@ -36,8 +36,10 @@ class OnboardingTest {
         compose.waitUntil(30000) { compose.onAllNodesWithText("Description").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("1070,00").assertExists()
         compose.onNodeWithText("Enregistrer").performScrollTo().performClick()
-        compose.waitUntil(30000) { compose.onAllNodesWithText("Crédit hypothécaire").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Crédit hypothécaire").performScrollTo().assertIsDisplayed()
+        compose.waitUntil(60000) { !model.busy.value && model.snapshot.value.charges.any { charge -> charge.description == "Crédit hypothécaire" && charge.cents == 107000L } && compose.onAllNodesWithText("Description").fetchSemanticsNodes().isEmpty() }
+        compose.onNodeWithText("Crédit hypothécaire").performScrollTo()
+        compose.waitUntil(30000) { compose.onNodeWithText("Crédit hypothécaire").isDisplayed() }
+        compose.onNodeWithText("Crédit hypothécaire").assertIsDisplayed()
         compose.onNodeWithText("Scanner une facture").performScrollTo().performClick()
         compose.waitUntil(30000) { compose.onAllNodesWithText("Importer image / PDF").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithContentDescription("Retour").performClick()

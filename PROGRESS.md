@@ -10,6 +10,12 @@ La suite complète, la restauration après désinstallation sur le code final, l
 
 Première réexécution globale : scénario complet avec annulation caméra, restauration vers base vide, quatre tests documents/rapports, recréation et erreur d’initialisation réussis. Credential réussie isolément mais en échec dans cette suite : fichier non retrouvé après un changement de dossier du sélecteur. Une course avec la mise à jour de la fenêtre native est suspectée, sans attribution définitive. Synchronisation explicite `UiAutomation.waitForIdle` ajoutée autour des touches externes ; nouvelle exécution requise. Ne pas annoncer la suite entière réussie.
 
+Résultat de cette première suite : **18 exécutés, 17 réussis, 1 échec**, durée 1954,114 secondes. Après synchronisation native et recherche des fichiers limitée à la liste du dossier (pas au fil d’Ariane), **2 tests ciblés réussis en 207,710 secondes**, credential/SAF et six thèmes/langues. Les 38 tests unitaires ont été réexécutés sous heap 64 Mo ; APK debug/tests et lint réussis en invocations distinctes après une course interne lint/kapt. Deuxième suite Android complète démarrée sur ces corrections, suivie de la restauration après désinstallation si elle réussit.
+
+Deuxième suite : **18 exécutés, 17 réussis, 1 échec**, durée 1901,767 secondes. Credential/SAF réel, scénario complet et toutes les intégrations réussis. Échec d’une assertion de visibilité du test onboarding : son attente du libellé « Crédit hypothécaire » pouvait déjà trouver le texte dans le champ encore présent pendant l’enregistrement/navigation. Le test exige maintenant la dépense persistée à 107000 centimes, la fin de l’opération et la disparition du formulaire avant de faire défiler sa carte puis d’en vérifier la visibilité. Réexécution ciblée et troisième suite complètes en préparation ; aucun succès global inventé.
+
+Onboarding/verrouillage simulé/formulaire de sauvegarde réexécuté avec cette condition renforcée : **1 test réussi, 148,404 secondes**. Build de tests et lint réussis. Troisième suite complète lancée sur ce code, avant les vérifications de restauration propre, tailles/polices et signature finale.
+
 ## Plan
 
 1. Inspecter dépôt et environnement (fait : dépôt distant vide, JDK/SDK disponibles).

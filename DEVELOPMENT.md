@@ -27,6 +27,15 @@ Pour vérifier les tests purs avec seulement 64 Mo de heap **du processus de tes
 
 Le cas de 90 Mo ne doit pas charger toute l’archive en mémoire. Le script d’initialisation ne modifie pas la configuration normale des autres builds.
 
+Pour vérifier ensemble les APK instrumentés et lint après une modification des tests, séparer les invocations :
+
+```sh
+./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest
+./gradlew :app:lintDebug
+```
+
+Une invocation incrémentale lançant lint pendant la régénération des stubs kapt AndroidTest a produit un `FileNotFoundException` interne à lint sur ce serveur. La séquence ci-dessus a ensuite réussi, sans désactiver aucun contrôle ni modifier les sources pour contourner l’analyse.
+
 La dernière commande nécessite un émulateur/appareil démarré. Les tests Compose supposent une installation sans dossier préexistant. Les tests d’intégration utilisent des bases et répertoires dédiés pour sauvegarde/restauration et OCR synthétique. Une réinstallation de l’app de test ne garantit pas que le dossier de l’app cible est vide ; utiliser un émulateur de test dédié.
 
 ## Restauration après désinstallation réelle
