@@ -4,9 +4,11 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.BackHandler
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.focusGroup
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -25,6 +27,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
@@ -48,6 +56,7 @@ import java.util.UUID
 import org.json.JSONObject
 
 private val dateFormat = DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT)
+private val LocalAppLocked = staticCompositionLocalOf { false }
 private fun date(value: String) = LocalDate.parse(value.trim(), dateFormat)
 private fun optionalDate(value: String) = value.takeIf { it.isNotBlank() }?.let(::date)
 private fun percent(value: String) = BigDecimal(value.replace(',', '.')).movePointRight(2).intValueExact().also { require(it in 0..10000) }
@@ -74,12 +83,24 @@ fun EquilyApp(model: EquilyModel, unlock: () -> Unit, canLock: () -> Boolean) {
             val ready by model.ready.collectAsStateWithLifecycle()
             val preferencesReady by model.preferencesReady.collectAsStateWithLifecycle()
             val locked by model.locked.collectAsStateWithLifecycle()
+            val focus = LocalFocusManager.current
+            val keyboard = LocalSoftwareKeyboardController.current
+            LaunchedEffect(locked) { if (locked) { focus.clearFocus(force = true); keyboard?.hide() } }
             Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                when {
-                    !ready || !preferencesReady -> Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) { Text("Equily", style = MaterialTheme.typography.displayMedium); CircularProgressIndicator() }
-                    locked -> Page(R.string.locked) { Action(R.string.unlock, Icons.Default.Lock, unlock) }
-                    snapshot.dossier == null -> Onboarding(model)
-                    else -> MainNavigation(model, snapshot, preferences, canLock)
+                if (!ready || !preferencesReady) {
+                    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) { Text("Equily", style = MaterialTheme.typography.displayMedium); CircularProgressIndicator() }
+                } else Box(Modifier.fillMaxSize()) {
+                    CompositionLocalProvider(LocalAppLocked provides locked) {
+                        Box(Modifier.focusProperties { onEnter = { if (locked) cancelFocusChange() } }.focusGroup().fillMaxSize().graphicsLayer { alpha = if (locked) 0f else 1f }.then(if (locked) Modifier.clearAndSetSemantics {} else Modifier)) {
+                            if (snapshot.dossier == null) Onboarding(model) else MainNavigation(model, snapshot, preferences, canLock)
+                        }
+                    }
+                    if (locked) Surface(Modifier.fillMaxSize().pointerInput(Unit) {
+                        awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } }
+                    }, color = MaterialTheme.colorScheme.background) {
+                        BackHandler {}
+                        Page(R.string.locked) { Action(R.string.unlock, Icons.Default.Lock, unlock) }
+                    }
                 }
             }
         }
@@ -109,7 +130,7 @@ private fun <Value> Choice(label: Int, values: List<Value>, current: Value, disp
     var expanded by remember { mutableStateOf(false) }
     Box {
         OutlinedButton({ expanded = true }, Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text(stringResource(label) + " : " + display(current)); Icon(Icons.Default.KeyboardArrowDown, null) }
-        DropdownMenu(expanded, { expanded = false }) { values.forEach { value -> DropdownMenuItem(text = { Text(display(value)) }, onClick = { changed(value); expanded = false }) } }
+        DropdownMenu(expanded && !LocalAppLocked.current, { expanded = false }) { values.forEach { value -> DropdownMenuItem(text = { Text(display(value)) }, onClick = { changed(value); expanded = false }) } }
     }
 }
 @Composable
@@ -328,7 +349,7 @@ private fun Details(model: EquilyModel, snapshot: Snapshot, charge: Charge, edit
         Choice(R.string.status, EntryStatus.entries.filterNot { it == EntryStatus.ARCHIVED }, charge.status, { stringResource(statusResource(it)) }) { status -> model.perform { model.repository.save(Codec.record(charge.copy(status = status))) } }
         if (charge.notes.isNotBlank()) Text(charge.notes)
         Action(R.string.edit, Icons.Default.Edit, edit); Action(R.string.add_payment, Icons.Default.ShoppingCart, payment)
-        if (charge.ruleId == null) Action(R.string.new_recurring, Icons.Default.DateRange, recurring)
+        if (charge.ruleId == null && snapshot.recurring.none { it.seedChargeId == charge.id }) Action(R.string.new_recurring, Icons.Default.DateRange, recurring)
         Action(if (charge.archived) R.string.resume else R.string.archive, Icons.Default.Delete) { model.perform { model.repository.save(Codec.record(charge.copy(archived = !charge.archived))) } }
         DocumentList(model, snapshot, charge.id)
         Text(stringResource(R.string.audit), style = MaterialTheme.typography.titleLarge)
@@ -422,7 +443,10 @@ private fun Recurrences(model: EquilyModel, snapshot: Snapshot, add: () -> Unit,
         snapshot.recurring.forEach { rule -> Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(18.dp)) {
             Text(rule.description, fontWeight = FontWeight.Bold); Text(Money.format(rule.cents)); Text(rule.first.format(dateFormat))
             Action(R.string.edit, Icons.Default.Edit) { edit(rule.id) }
-            Action(if (rule.paused) R.string.resume else R.string.pause, Icons.Default.Close) { model.perform { model.repository.save(Codec.record(rule.copy(paused = !rule.paused))); model.repository.refreshRecurring() } }
+            Text(stringResource(R.string.anchor_day) + " : " + rule.anchorDay)
+            rule.end?.let { Text(stringResource(R.string.end_date) + " : " + it.format(dateFormat)) }
+            rule.pauses.forEach { pause -> Text(stringResource(R.string.pause) + " : " + pause.from.format(dateFormat) + " → " + (pause.resumed?.format(dateFormat) ?: "…")) }
+            if (rule.end == null || rule.end >= LocalDate.now()) Action(if (rule.paused) R.string.resume else R.string.pause, Icons.Default.Close) { model.perform { model.repository.setRecurringPaused(rule.id, !rule.paused); model.repository.refreshRecurring() } }
         } } }
     }
 }
@@ -430,18 +454,22 @@ private fun Recurrences(model: EquilyModel, snapshot: Snapshot, add: () -> Unit,
 private fun RecurringForm(model: EquilyModel, snapshot: Snapshot, existing: RecurringRule? = null, seeded: Charge? = null, done: () -> Unit) {
     val description = text(existing?.description ?: seeded?.description.orEmpty()); val amount = text((existing?.cents ?: seeded?.cents)?.let(::decimal).orEmpty()); val first = text((seeded?.date?.plusMonths(1) ?: LocalDate.now()).format(dateFormat)); val end = text(existing?.end?.format(dateFormat).orEmpty()); val split = text(decimal((existing?.selfBasisPoints ?: seeded?.selfBasisPoints ?: snapshot.dossier?.selfBasisPoints ?: 5000).toLong()))
     var category by remember { mutableStateOf(existing?.category ?: seeded?.category ?: "mortgage") }; var frequency by remember { mutableStateOf(existing?.frequency ?: Frequency.MONTHLY) }
+    val anchor = text((existing?.anchorDay ?: seeded?.date?.dayOfMonth)?.toString().orEmpty()); val child = text(existing?.child ?: seeded?.child.orEmpty()); val notes = text(existing?.notes ?: seeded?.notes.orEmpty())
     Page(R.string.new_recurring) {
         Field(R.string.description, description); Field(R.string.amount, amount, true); Field(R.string.date, first); Field(R.string.end_date, end); Field(R.string.split, split, true)
+        Field(R.string.anchor_day, anchor, true); Field(R.string.child, child); Field(R.string.notes, notes)
+        Text(stringResource(R.string.recurring_revision_help), style = MaterialTheme.typography.bodySmall)
         Choice(R.string.category, categories, category, { stringResource(categoryResources[categories.indexOf(it)]) }) { category = it }
-        Choice(R.string.frequency, Frequency.entries, frequency, { stringResource(when (it) { Frequency.MONTHLY -> R.string.monthly; Frequency.QUARTERLY -> R.string.quarterly; Frequency.YEARLY -> R.string.yearly }) }) { frequency = it }
+        Choice(R.string.frequency, Frequency.entries, frequency, { stringResource(when (it) { Frequency.MONTHLY -> R.string.monthly; Frequency.QUARTERLY -> R.string.quarterly; Frequency.YEARLY -> R.string.yearly }) }) {
+            if (seeded != null && first.value == seeded.date.plusMonths(frequency.months).format(dateFormat)) first.value = seeded.date.plusMonths(it.months).format(dateFormat)
+            frequency = it
+        }
         Save(model) { model.perform(done, notify = false) {
             require(description.value.isNotBlank())
             val effective = date(first.value)
-            val rule = RecurringRule(UUID.randomUUID().toString(), description.value.trim(), Money.parse(amount.value), effective, frequency, percent(split.value), category, optionalDate(end.value))
-            if (existing == null) model.repository.save(Codec.record(rule)) else {
-                require(effective > existing.first)
-                model.repository.saveBatch(listOf(Codec.record(existing.copy(end = effective.minusDays(1))), Codec.record(rule)))
-            }
+            val rule = RecurringRule(UUID.randomUUID().toString(), description.value.trim(), Money.parse(amount.value), effective, frequency, percent(split.value), category, optionalDate(end.value), paused = existing?.paused ?: false, pauses = if (existing?.paused == true) listOf(RecurringPause(effective)) else emptyList(), anchorDay = anchor.value.takeIf { it.isNotBlank() }?.toInt() ?: effective.dayOfMonth, child = child.value.trim(), notes = notes.value.trim(), seedChargeId = seeded?.id)
+            if (seeded != null) require(effective > seeded.date && snapshot.recurring.none { it.seedChargeId == seeded.id } && seeded.ruleId == null)
+            if (existing == null) model.repository.save(Codec.record(rule)) else model.repository.reviseRecurring(existing.id, rule)
             model.repository.refreshRecurring()
         } }
     }
@@ -465,7 +493,7 @@ private fun AgreementForm(model: EquilyModel, done: () -> Unit) {
 private fun DocumentRow(model: EquilyModel, document: Document, removable: Boolean) {
     val context = LocalContext.current
     var viewing by remember { mutableStateOf(false) }
-    if (viewing) DocumentViewer(model, document) { viewing = false }
+    if (viewing && !LocalAppLocked.current) DocumentViewer(model, document) { viewing = false }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(document.mime.substringAfter('/') + " · " + document.size / 1024 + " KB", Modifier.weight(1f))
         IconButton({ viewing = true }) { Icon(Icons.Default.Search, stringResource(R.string.view)) }
@@ -526,7 +554,7 @@ private fun BackupPage(model: EquilyModel) {
         Text(stringResource(R.string.backup_help)); Field(R.string.passphrase, passphrase, password = true)
         Action(R.string.export_backup, Icons.Default.Done) { if (passphrase.value.length >= 12) export.launch("Equily-${LocalDate.now()}.equily") else model.message.value = R.string.error }
         Action(R.string.restore, Icons.Default.Refresh) { if (passphrase.value.isNotBlank()) confirm = true else model.message.value = R.string.error }
-        if (confirm) AlertDialog(onDismissRequest = { confirm = false }, title = { Text(stringResource(R.string.restore)) }, text = { Text(stringResource(R.string.restore_warning)) }, confirmButton = { TextButton({ confirm = false; restore.launch(arrayOf("application/octet-stream", "application/zip", "*/*")) }) { Text(stringResource(R.string.restore)) } }, dismissButton = { TextButton({ confirm = false }) { Text(stringResource(R.string.cancel)) } })
+        if (confirm && !LocalAppLocked.current) AlertDialog(onDismissRequest = { confirm = false }, title = { Text(stringResource(R.string.restore)) }, text = { Text(stringResource(R.string.restore_warning)) }, confirmButton = { TextButton({ confirm = false; restore.launch(arrayOf("application/octet-stream", "application/zip", "*/*")) }) { Text(stringResource(R.string.restore)) } }, dismissButton = { TextButton({ confirm = false }) { Text(stringResource(R.string.cancel)) } })
     }
 }
 @Composable

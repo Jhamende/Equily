@@ -48,6 +48,7 @@ class EquilyModel(application: Application) : AndroidViewModel(application) {
             }
         }
         viewModelScope.launch(Dispatchers.IO) {
+            backups.cleanupStaging()
             repository.refreshRecurring()
             repository.snapshots.collect { snapshot.value = it; ready.value = true }
         }

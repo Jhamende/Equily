@@ -84,4 +84,36 @@ class LedgerTest {
         assertTrue(recurring.generate(LocalDate.of(2026, 3, 31), entries.map { it.id }.toSet()).isEmpty())
         assertEquals(5000, entries.first().selfBasisPoints)
     }
+    @Test fun resumptionSkipsPausedPeriodsWithoutChangingExistingCharges() {
+        val rule = RecurringRule("pause-rule", "Mortgage", 107000, date, Frequency.MONTHLY, 5000, "mortgage")
+        val january = rule.generate(date, emptySet()).single()
+        val paused = rule.setPaused(true, date.plusDays(1))
+        assertEquals(listOf(january), paused.generate(date.plusMonths(3), emptySet()))
+        val resumed = paused.setPaused(false, LocalDate.of(2026, 4, 15))
+        val added = resumed.generate(LocalDate.of(2026, 5, 31), setOf(january.id))
+        assertEquals(listOf(LocalDate.of(2026, 4, 30), LocalDate.of(2026, 5, 31)), added.map { it.date })
+        assertTrue(resumed.generate(LocalDate.of(2026, 5, 31), (added + january).map { it.id }.toSet()).isEmpty())
+        assertEquals(listOf(RecurringPause(date.plusDays(1), LocalDate.of(2026, 4, 15))), resumed.pauses)
+    }
+    @Test fun seededFebruaryRulePreservesThirtyFirstAndChildSnapshot() {
+        val rule = RecurringRule("seeded", "School", 12500, LocalDate.of(2026, 2, 28), Frequency.MONTHLY, 7000, "school", anchorDay = 31, child = "Child", notes = "Agreed tuition", seedChargeId = "manual")
+        val charges = rule.generate(LocalDate.of(2026, 4, 30), emptySet())
+        assertEquals(listOf(LocalDate.of(2026, 2, 28), LocalDate.of(2026, 3, 31), LocalDate.of(2026, 4, 30)), charges.map { it.date })
+        assertTrue(charges.all { it.child == "Child" && it.notes == "Agreed tuition" && it.selfBasisPoints == 7000 && it.status == EntryStatus.DECLARED })
+    }
+    @Test fun repeatedPausesEndAndQuarterlyAnchorsRemainDeterministic() {
+        val rule = RecurringRule("quarterly", "Insurance", 30000, date, Frequency.QUARTERLY, 5000, "insurance", end = LocalDate.of(2027, 1, 1))
+            .setPaused(true, LocalDate.of(2026, 4, 1)).setPaused(false, LocalDate.of(2026, 6, 1))
+            .setPaused(true, LocalDate.of(2026, 10, 1)).setPaused(false, LocalDate.of(2026, 11, 1))
+        assertEquals(listOf(date, LocalDate.of(2026, 7, 31)), rule.generate(LocalDate.of(2027, 12, 31), emptySet()).map { it.date })
+        assertTrue(runCatching { rule.copy(anchorDay = 32) }.isFailure)
+        assertTrue(runCatching { RecurringPause(date, date.minusDays(1)) }.isFailure)
+        assertTrue(runCatching { rule.setPaused(true, date) }.isFailure)
+    }
+    @Test fun legacyPauseDoesNotBackfillUnknownPeriodsOnResume() {
+        val rule = RecurringRule("legacy", "Mortgage", 107000, date, Frequency.MONTHLY, 5000, "mortgage", paused = true)
+        assertTrue(rule.generate(date.plusMonths(5), emptySet()).isEmpty())
+        val resumed = rule.setPaused(false, LocalDate.of(2026, 5, 1))
+        assertEquals(listOf(LocalDate.of(2026, 5, 31)), resumed.generate(LocalDate.of(2026, 5, 31), emptySet()).map { it.date })
+    }
 }

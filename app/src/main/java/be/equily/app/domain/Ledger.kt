@@ -145,6 +145,10 @@ object Ledger {
 }
 
 enum class Frequency(val months: Long) { MONTHLY(1), QUARTERLY(3), YEARLY(12) }
+data class RecurringPause(val from: LocalDate, val resumed: LocalDate? = null) {
+    init { require(resumed == null || resumed >= from) }
+    fun contains(date: LocalDate) = date >= from && (resumed == null || date < resumed)
+}
 data class RecurringRule(
     val id: String,
     val description: String,
@@ -155,17 +159,35 @@ data class RecurringRule(
     val category: String,
     val end: LocalDate? = null,
     val paused: Boolean = false,
+    val pauses: List<RecurringPause> = emptyList(),
+    val anchorDay: Int = first.dayOfMonth,
+    val child: String = "",
+    val notes: String = "",
+    val seedChargeId: String? = null,
 ) {
+    init {
+        require(anchorDay in 1..31)
+        require(pauses.size <= 1000)
+        require(pauses.zipWithNext().all { (previous, next) -> previous.resumed != null && previous.resumed <= next.from })
+        require(pauses.dropLast(1).all { it.resumed != null })
+        require(pauses.isEmpty() || (pauses.last().resumed == null) == paused)
+    }
+    fun setPaused(value: Boolean, effective: LocalDate): RecurringRule {
+        if (value == paused) return this
+        return if (value) copy(paused = true, pauses = pauses + RecurringPause(effective))
+        else if (pauses.isEmpty()) copy(paused = false, pauses = listOf(RecurringPause(first, maxOf(first, effective))))
+        else copy(paused = false, pauses = pauses.dropLast(1) + pauses.last().copy(resumed = effective))
+    }
     fun generate(until: LocalDate, existingIds: Set<String>): List<Charge> {
-        if (paused || until < first) return emptyList()
+        if ((paused && pauses.isEmpty()) || until < first) return emptyList()
         val generated = mutableListOf<Charge>()
         var offset = 0L
         while (true) {
             val month = YearMonth.from(first).plusMonths(offset)
-            val date = month.atDay(first.dayOfMonth.coerceAtMost(month.lengthOfMonth()))
+            val date = month.atDay(anchorDay.coerceAtMost(month.lengthOfMonth()))
             if (date > until || (end != null && date > end)) break
             val entryId = "$id:$date"
-            if (entryId !in existingIds) generated += Charge(entryId, description, cents, date, selfBasisPoints, category = category, ruleId = id)
+            if (date >= first && pauses.none { it.contains(date) } && entryId !in existingIds) generated += Charge(entryId, description, cents, date, selfBasisPoints, category = category, child = child, notes = notes, ruleId = id)
             offset += frequency.months
             require(offset <= 12000) { "Recurrence exceeds 1000 years" }
         }

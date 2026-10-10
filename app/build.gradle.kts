@@ -49,6 +49,7 @@ dependencies {
     implementation("com.google.mlkit:text-recognition:16.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+    implementation("com.google.crypto.tink:tink-android:1.21.0")
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("androidx.fragment:fragment-ktx:1.8.9")
     testImplementation("junit:junit:4.13.2")

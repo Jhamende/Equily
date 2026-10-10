@@ -12,6 +12,8 @@ Les imports acceptent JPEG, PNG et PDF (25 Mo maximum). La lecture utilise le mo
 
 Les rapports mensuels PDF/CSV sont produits sur le téléphone. Les sauvegardes `.equily` contiennent le dossier, les transactions, règles, récurrences, documents et historique. Elles sont chiffrées avec une phrase secrète d’au moins douze caractères. Conserver fichier et phrase séparément ; aucune récupération de phrase perdue. La restauration remplace le dossier actuel après confirmation. Langue, thème et verrouillage sont des préférences propres au téléphone et ne sont pas restaurés.
 
+Les nouveaux exports v2 traitent les pièces et le chiffrement en flux, avec une limite explicite de 1 Go et du stockage temporaire privé nécessaire (jusqu’à deux tailles d’archive). Les anciennes sauvegardes v1 restent lisibles, avec leur limite de 100 Mo et un besoin mémoire plus élevé. Les pauses de récurrence excluent les échéances suspendues sans rattrapage ; une révision ne change jamais les dépenses déjà créées.
+
 ## Compilation et installation
 
 Voir `DEVELOPMENT.md`. Construire avec `./gradlew :app:assembleDebug`. Installer localement avec `adb install -r app/build/outputs/apk/debug/app-debug.apk`. Cet APK debug n’est pas l’APK de distribution. Une release signée utilise une clé dédiée et reste bloquée tant que les critères d’acceptation ne sont pas tous vérifiés.

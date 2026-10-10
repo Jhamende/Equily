@@ -71,6 +71,9 @@ data class Snapshot(val records: List<Record>) {
         require(documents.all { it.id.matches(Regex("[a-f0-9-]{36}")) && it.size in 1..25_000_000 && it.hash.matches(Regex("[a-f0-9]{64}")) && it.mime in setOf("image/jpeg", "image/png", "application/pdf") })
         require(agreements.all { it.selfBasisPoints in 0..10000 })
         require(recurring.all { it.cents in 1..MAX_CENTS && it.selfBasisPoints in 0..10000 && (it.end == null || it.end >= it.first) })
+        val seeded = recurring.mapNotNull { it.seedChargeId }
+        require(seeded.distinct().size == seeded.size)
+        require(recurring.all { rule -> rule.seedChargeId == null || charges.any { it.id == rule.seedChargeId && it.date < rule.first && it.ruleId == null } })
         dossier?.let { require(it.selfBasisPoints in 0..10000 && it.openingBalance in -MAX_CENTS..MAX_CENTS) }
         Ledger.summarize(charges, movements)
     }
@@ -110,10 +113,17 @@ object Codec {
         put("self", dossier.self); put("other", dossier.other); put("children", dossier.children); put("start", dossier.start); put("separation", dossier.separation?.toString() ?: ""); put("split", dossier.selfBasisPoints); put("opening", dossier.openingBalance)
     }.toString())
     fun recurring(record: Record): RecurringRule = with(record.json()) {
-        RecurringRule(record.id, getString("description"), exactLong("cents"), LocalDate.parse(getString("first")), Frequency.valueOf(getString("frequency")), exactInt("split"), getString("category"), optional("end")?.let(LocalDate::parse), optBoolean("paused"))
+        val first = LocalDate.parse(getString("first"))
+        val pauses = optJSONArray("pauses")?.let { array -> (0 until array.length()).map { index ->
+            val pause = array.getJSONObject(index)
+            RecurringPause(LocalDate.parse(pause.getString("from")), pause.optional("resumed")?.let(LocalDate::parse))
+        } }.orEmpty()
+        RecurringRule(record.id, getString("description"), exactLong("cents"), first, Frequency.valueOf(getString("frequency")), exactInt("split"), getString("category"), optional("end")?.let(LocalDate::parse), optBoolean("paused"), pauses, if (has("anchorDay")) exactInt("anchorDay") else first.dayOfMonth, optString("child"), optString("notes"), optional("seedCharge"))
     }
     fun record(rule: RecurringRule) = Record(rule.id, "recurring", JSONObject().apply {
         put("description", rule.description); put("cents", rule.cents); put("first", rule.first); put("frequency", rule.frequency); put("split", rule.selfBasisPoints); put("category", rule.category); put("end", rule.end?.toString() ?: ""); put("paused", rule.paused)
+        put("anchorDay", rule.anchorDay); put("child", rule.child); put("notes", rule.notes); put("seedCharge", rule.seedChargeId ?: "")
+        put("pauses", JSONArray(rule.pauses.map { pause -> JSONObject().put("from", pause.from).put("resumed", pause.resumed?.toString() ?: "") }))
     }.toString())
     fun document(record: Record): Document = with(record.json()) { Document(record.id, optional("charge"), getString("mime"), getString("hash"), exactLong("size")) }
     fun record(document: Document) = Record(document.id, "document", JSONObject().apply { put("charge", document.chargeId ?: ""); put("mime", document.mime); put("hash", document.hash); put("size", document.size) }.toString())
@@ -145,6 +155,9 @@ class LocalRepository(context: Context, databaseName: String = "equily.db") : Eq
     override suspend fun save(record: Record) = saveBatch(listOf(record))
     suspend fun saveBatch(records: List<Record>, beforeWrite: () -> Unit = {}) = mutex.withLock {
         beforeWrite()
+        saveBatchLocked(records)
+    }
+    private suspend fun saveBatchLocked(records: List<Record>) {
         database.withTransaction {
             val before = database.records().all()
             Snapshot(before.filterNot { old -> records.any { it.id == old.id } } + records).validate()
@@ -174,5 +187,17 @@ class LocalRepository(context: Context, databaseName: String = "equily.db") : Eq
             val generated = current.recurring.flatMap { it.generate(LocalDate.now(), existing) }
             if (generated.isNotEmpty()) database.records().insert(generated.map(Codec::record))
         }
+    }
+    suspend fun setRecurringPaused(id: String, paused: Boolean, effective: LocalDate = LocalDate.now()) = mutex.withLock {
+        val rule = snapshot().recurring.first { it.id == id }
+        saveBatchLocked(listOf(Codec.record(rule.setPaused(paused, effective))))
+    }
+    suspend fun reviseRecurring(id: String, replacement: RecurringRule) = mutex.withLock {
+        val current = snapshot()
+        val previous = current.recurring.first { it.id == id }
+        require(replacement.id != id && current.records.none { it.id == replacement.id })
+        require(replacement.first > previous.first)
+        require(current.charges.none { it.ruleId == id && it.date >= replacement.first })
+        saveBatchLocked(listOf(Codec.record(previous.copy(end = replacement.first.minusDays(1))), Codec.record(replacement)))
     }
 }

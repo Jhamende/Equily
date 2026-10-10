@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import androidx.room.withTransaction
 import be.equily.app.domain.BackupCrypto
+import be.equily.app.domain.copyLimited
 import be.equily.app.domain.InvoiceCandidate
 import be.equily.app.domain.InvoiceParser
 import com.google.mlkit.vision.common.InputImage
@@ -16,7 +17,6 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
@@ -26,11 +26,25 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 
 fun sha256(bytes: ByteArray) = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+fun sha256(file: File): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+    file.inputStream().use { input ->
+        val buffer = ByteArray(8192)
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            digest.update(buffer, 0, count)
+        }
+    }
+    return digest.digest().joinToString("") { "%02x".format(it) }
+}
 
 fun InputStream.readLimited(limit: Int): ByteArray {
     val output = ByteArrayOutputStream()
@@ -140,66 +154,107 @@ class AttachmentStore(private val context: Context, private val repository: Loca
 }
 
 class BackupStore(private val context: Context, private val repository: LocalRepository, private val attachments: AttachmentStore) {
+    private companion object {
+        val initialization = Mutex()
+        var initialized = false
+    }
+    suspend fun cleanupStaging() = withContext(Dispatchers.IO) {
+        initialization.withLock {
+            if (!initialized) {
+                context.cacheDir.listFiles()?.filter { it.isDirectory && it.name.matches(Regex("(?:backup|restore)-[a-f0-9-]{36}")) }?.forEach { it.deleteRecursively() }
+                initialized = true
+            }
+        }
+    }
     suspend fun export(uri: Uri, passphrase: CharArray) = withContext(Dispatchers.IO) {
+        val staging = File(context.cacheDir, "backup-${UUID.randomUUID()}")
         try {
+            cleanupStaging()
+            check(staging.mkdirs())
             repository.mutex.withLock {
                 val current = repository.snapshot()
                 current.validate()
-                require(current.documents.distinctBy { it.hash }.sumOf { it.size } < 75_000_000) { "Backup exceeds local memory safety limit" }
-                val zip = ByteArrayOutputStream()
-                ZipOutputStream(zip).use { output ->
+                val documents = current.documents.distinctBy { it.hash }
+                val records = Codec.encode(current.records)
+                require(records.size <= 20_000_000)
+                require(documents.sumOf { it.size } + records.size <= BackupCrypto.MAX_CLEAR_BYTES)
+                val zip = File(staging, "archive.zip")
+                ZipOutputStream(zip.outputStream().buffered()).use { output ->
                     output.putNextEntry(ZipEntry("records.json"))
-                    output.write(Codec.encode(current.records))
+                    output.write(records)
                     output.closeEntry()
-                    for (document in current.documents.distinctBy { it.hash }) {
-                        val bytes = attachments.file(document).readBytes()
-                        require(sha256(bytes) == document.hash)
-                        output.putNextEntry(ZipEntry("attachments/${document.hash}")); output.write(bytes); output.closeEntry()
+                    for (document in documents) {
+                        val original = attachments.file(document)
+                        require(original.length() == document.size && sha256(original) == document.hash)
+                        output.putNextEntry(ZipEntry("attachments/${document.hash}"))
+                        original.inputStream().use { require(it.copyLimited(output, document.size) == document.size) }
+                        output.closeEntry()
                     }
                 }
-                val encrypted = BackupCrypto.encrypt(zip.toByteArray(), passphrase)
-                requireNotNull(context.contentResolver.openOutputStream(uri, "wt")).use { it.write(encrypted) }
+                val encrypted = File(staging, "archive.equily")
+                zip.inputStream().buffered().use { input ->
+                    encrypted.outputStream().buffered().use { BackupCrypto.encrypt(input, it, passphrase) }
+                }
+                require(encrypted.length() <= BackupCrypto.MAX_ENCRYPTED_BYTES)
+                requireNotNull(context.contentResolver.openOutputStream(uri, "wt")).use { output ->
+                    encrypted.inputStream().use { it.copyLimited(output, BackupCrypto.MAX_ENCRYPTED_BYTES) }
+                }
             }
-        } finally { passphrase.fill('\u0000') }
+        } finally { passphrase.fill('\u0000'); staging.deleteRecursively() }
     }
     suspend fun restore(uri: Uri, passphrase: CharArray) = withContext(Dispatchers.IO) {
-        val staging = File(context.cacheDir, "restore-${UUID.randomUUID()}").apply { mkdirs() }
+        val staging = File(context.cacheDir, "restore-${UUID.randomUUID()}")
         try {
-            val encrypted = requireNotNull(context.contentResolver.openInputStream(uri)).use { it.readLimited(100_000_000) }
-            val clear = BackupCrypto.decrypt(encrypted, passphrase)
+            cleanupStaging()
+            check(staging.mkdirs())
+            val clear = File(staging, "archive.zip")
+            requireNotNull(context.contentResolver.openInputStream(uri)).use { input ->
+                clear.outputStream().buffered().use { BackupCrypto.decrypt(input, it, passphrase) }
+            }
             val names = mutableSetOf<String>()
             var total = 0L
-            ZipInputStream(ByteArrayInputStream(clear)).use { zip ->
+            ZipInputStream(clear.inputStream().buffered()).use { zip ->
                 while (true) {
                     val entry = zip.nextEntry ?: break
                     require(!entry.isDirectory && (entry.name == "records.json" || entry.name.matches(Regex("attachments/[a-f0-9]{64}"))))
                     require(names.add(entry.name))
                     require(names.size <= 100001)
-                    val bytes = zip.readLimited(if (entry.name == "records.json") 20_000_000 else 25_000_000)
-                    total += bytes.size
-                    require(total <= 95_000_000)
-                    File(staging, entry.name.substringAfterLast('/')).writeBytes(bytes)
+                    val limit = if (entry.name == "records.json") 20_000_000L else 25_000_000L
+                    File(staging, entry.name.substringAfterLast('/')).outputStream().buffered().use { output ->
+                        total += zip.copyLimited(output, minOf(limit, BackupCrypto.MAX_CLEAR_BYTES - total))
+                    }
                     zip.closeEntry()
                 }
             }
             val current = Codec.decode(File(staging, "records.json").readBytes())
             require(names == current.documents.map { "attachments/${it.hash}" }.toSet() + "records.json")
             for (document in current.documents) {
-                val bytes = File(staging, document.hash).readBytes()
-                require(bytes.size.toLong() == document.size && sha256(bytes) == document.hash)
+                val original = File(staging, document.hash)
+                require(original.length() == document.size && sha256(original) == document.hash)
             }
             repository.mutex.withLock {
-                for (document in current.documents.distinctBy { it.hash }) {
-                    val destination = attachments.file(document)
-                    if (destination.exists()) require(sha256(destination.readBytes()) == document.hash)
-                    else check(File(staging, document.hash).renameTo(destination))
+                withContext(NonCancellable) {
+                    val installed = mutableListOf<File>()
+                    try {
+                        for (document in current.documents.distinctBy { it.hash }) {
+                            val destination = attachments.file(document)
+                            if (destination.exists()) require(destination.length() == document.size && sha256(destination) == document.hash)
+                            else {
+                                check(File(staging, document.hash).renameTo(destination))
+                                installed += destination
+                            }
+                        }
+                        repository.database.withTransaction {
+                            repository.database.records().clear()
+                            repository.database.records().insert(current.records)
+                        }
+                    } catch (failure: Exception) {
+                        installed.forEach { it.delete() }
+                        throw failure
+                    }
+                    val retained = current.documents.map { it.hash }.toSet()
+                    attachments.directory.listFiles()?.filter { it.name !in retained }?.forEach { it.delete() }
                 }
-                repository.database.withTransaction {
-                    repository.database.records().clear()
-                    repository.database.records().insert(current.records)
-                }
-                val retained = current.documents.map { it.hash }.toSet()
-                attachments.directory.listFiles()?.filter { it.name !in retained }?.forEach { it.delete() }
             }
         } finally { passphrase.fill('\u0000'); staging.deleteRecursively() }
     }
