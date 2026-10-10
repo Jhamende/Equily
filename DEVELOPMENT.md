@@ -46,6 +46,14 @@ Après compilation des APK debug/tests, `bash tools/verify-device-suite.sh emula
 
 Le test de credential confirme une annulation puis une authentification par Android, et le retour d’un vrai sélecteur SAF après import d’un PNG synthétique sous verrouillage. Le test de parcours général injecte les réponses de sélecteurs pour les fichiers synthétiques, tout en utilisant les contrats, écrans et services applicatifs réels. La biométrie physique et le chemin BiometricPrompt API 30+ restent distincts et doivent être déclarés non testés en l’absence d’appareil approprié.
 
+Le parcours natif de credential/SAF utilise les libellés de l’image AOSP Android 8 anglaise x86_64 inspectée sur ce serveur, tandis que l’interface Equily est française. Les interactions avec le sélecteur attendent sa stabilisation et recherchent les fichiers dans sa liste de dossier, pas dans le fil d’Ariane.
+
+### Tailles, polices et thèmes localisés
+
+Avec les APK debug/tests installés et aucune autre instrumentation active, `bash tools/verify-layouts.sh emulator-5554 --wipe-test-app` réutilise le test visuel sur téléphone 320 × 640, tablette 1280 × 800 et téléphone avec police à 1,3, à densité 160. Chaque variante réussie conserve six captures FR/NL/EN × clair/sombre dans `artifacts/visual` et son journal dans `artifacts/verification`. Le script refuse les AVD non réservés/API autres que 26 et restaure les réglages de dimensions/densité/police en sortie. Le test remplace le dossier par une fixture synthétique puis le vide ; ne pas l’exécuter sur des données personnelles.
+
+Les captures proviennent du rendu de la propre View de l’application de test ; FLAG_SECURE n’est jamais désactivé. Le test vérifie les libellés accessibles et l’apparence clair/sombre des barres système. Cela ne remplace pas une revue TalkBack audible ni une vérification de tous les gestes sur téléphone physique.
+
 Le script suivant est destructif **pour les données Equily du seul émulateur de test choisi**, jamais pour un téléphone physique. Il refuse les AVD autres que `equily-api26` et `equily-clean-restore`. Ne pas y conserver de dossier personnel. Construire préalablement les APK debug et de tests, arrêter toute autre instrumentation, puis :
 
 ```sh
