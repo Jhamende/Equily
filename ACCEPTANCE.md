@@ -16,11 +16,13 @@ See `PROGRESS.md` for actual checks and outstanding work.
 | 13: reports with provenance | Monthly/yearly PDF/CSV; annual NL pagination and multi-period allocations tested; exports in full journey |
 | 14: complete encrypted backup and clean restore | v1/v2 compatibility, tampering rejection, large archive; actual uninstall/reinstall, restore and persisted reopen |
 | 4, 14, 16: localization/layout and privacy | Three layouts × FR/NL/EN × light/dark; secure-window and actual Android credential/SAF test; no INTERNET permission |
-| 17–19: delivery infrastructure | CI/release workflows and required documentation present; private stable release key, fingerprint gate; owner authorized publication on 11 October 2026; remote verification pending |
+| 17–19: delivery infrastructure | Owner authorized publication on 11 October 2026; sources pushed, CI passed on API 35; stable key stored as release-environment secrets restricted to tag v0.1.0 |
 
 Signed release: apksigner v2 and expected certificate verified, 16 KB ZIP/native alignment checked, manifest minimum 26/target 36/version 0.1.0 code 1, non-debuggable and no INTERNET permission. Fresh-install French onboarding, 50/50 dossier without mandatory private information, zero dashboard and persistence after forced restart verified using native Android UI. Final artifact/commit/checksum are recorded in `artifacts/DELIVERY.md`.
 
 Full-suite evidence: `artifacts/verification/android-api26-20261010T192729Z.txt` (18 passed, none failed/skipped). Details and intermediate failures in `PROGRESS.md`. Synthetic emulator tests do not constitute physical-camera, audible TalkBack or biometric hardware acceptance.
+
+GitHub CI evidence: https://github.com/Jhamende/Equily/actions/runs/38090796846 on commit `690705e0399a25a1183d24f6e47ed203ad161889`. Build, unit tests and lint passed; API 35 instrumented report has 18 tests, zero failures and one deliberate skip (real credential test needs the synthetic PIN harness). Thus 17 passed on API 35, not 18; the complete credential/SAF scenario passed separately in the full API 26 suite. No skipped test is misreported as executed.
 
 ## Pending gates
 

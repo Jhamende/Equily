@@ -2,7 +2,9 @@
 
 ## Publication autorisée le 11 octobre 2026
 
-Le propriétaire a explicitement autorisé la publication. Push des sources et CI distante en préparation ; pas encore de tag ni release. Confirmation demandée pour l'acceptation des limites physiques/TalkBack et pour la sauvegarde indépendante éprouvée de la clé. La porte d'acceptation reste fermée tant que ces points sont ouverts. Le bilan du 10 octobre ci-dessous décrit la livraison locale vérifiée.
+Le propriétaire a explicitement autorisé la publication. Sources poussées sur `main`. Première CI en échec car sdkmanager absent du PATH du runner ; installation explicite par action Android SDK épinglée ajoutée aux workflows compilation et release, puis CI réussie : https://github.com/Jhamende/Equily/actions/runs/38090796846, commit `690705e0399a25a1183d24f6e47ed203ad161889`. Compilation, tests unitaires et lint réussis ; API 35 : 18 tests recensés, 17 réussis, zéro échec, un ignoré (credential exige le harness PIN synthétique). Ne pas compter cet ignoré comme réussite : credential/SAF a été réellement exécuté dans les 18/18 de la suite API 26.
+
+Environnement GitHub `release` créé, restreint au seul tag `v0.1.0`. Les quatre secrets de signature y sont configurés sans affichage, pas dans les secrets de dépôt accessibles aux jobs ordinaires. La clé locale existante est conservée ; cette configuration GitHub n'est pas une sauvegarde récupérable indépendante. Aucun tag ni release créé. Confirmation demandée pour l'acceptation des limites physiques/TalkBack et pour la sauvegarde indépendante éprouvée de la clé ; porte d'acceptation maintenue fermée. Le bilan du 10 octobre ci-dessous décrit la livraison locale vérifiée.
 
 ## État au 10 octobre 2026
 

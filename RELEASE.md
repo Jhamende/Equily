@@ -16,6 +16,8 @@ Certificat public généré le 10 octobre 2026 : alias `equily-release`, RSA 307
 
 Secrets Actions à configurer uniquement avec autorisation : `EQUILY_KEYSTORE_BASE64` (contenu du keystore encodé), `EQUILY_STORE_PASSWORD`, `EQUILY_KEY_ALIAS`, `EQUILY_KEY_PASSWORD`. Les entrer via interface Secrets/Actions ou `gh secret set` avec entrée standard/fichiers, sans les afficher. Limiter les accès et protéger l’environnement `release` avant publication. Aucun secret disponible dans les PRs non fiables.
 
+Le 11 octobre 2026, après autorisation explicite de publication, ces quatre secrets sont configurés dans l'environnement `release`, avec règle de déploiement autorisant uniquement le tag `v0.1.0`. La CI de branche et les PRs n'utilisent pas cet environnement. Les secrets GitHub ne remplacent pas la sauvegarde indépendante récupérable de la clé. CI distante réussie et limites dans `ACCEPTANCE.md` ; aucun tag ni release tant que les portes restantes ne sont confirmées.
+
 ## Portes de sortie
 
 1. Toutes les exigences du brief satisfaites, écarts `PROGRESS.md` résolus.
