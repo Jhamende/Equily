@@ -1,6 +1,10 @@
 # Suivi vérifié — Equily
 
-## Publication autorisée le 11 octobre 2026
+## Pré-release publiée le 11 octobre 2026
+
+GitHub confirme la pré-release **Equily v0.1.0 — Initial Android Release** : https://github.com/Jhamende/Equily/releases/tag/v0.1.0. Tag sur `4b85c99bea6c3f4cffe266b725cc1f9d4ea4d17f`. CI du commit final réussie (run 38091439011), puis vérification et publication signée réussies (run 38091948293). APK et SHA256SUMS présents publiquement, téléchargés puis signature/empreinte, source Git, manifest, alignement ZIP/natif16 Ko et checksum vérifiés indépendamment. APK54467567 octets, SHA-256 `dcd1d262762effaedbbd00ffc2fdbbcdfaf8e220d48b2b1e0445e99e282da417`. Le digest d'asset GitHub est identique ; les copies `artifacts/Equily-v0.1.0-release.apk` et `artifacts/SHA256SUMS` sont maintenant exactement celles téléchargées de la release, pas la compilation locale distincte.
+
+Pas d'émulateur connecté lors du téléchargement final : aucune nouvelle installation de l'APK téléchargé revendiquée. Les smoke tests signés antérieurs portent sur la même source applicative et clé ; le pipeline du tag a recompilé et répété les tests disponibles. API35 :17 réussis/1 credential ignoré ; API26 local :18 réussis, dont credential/SAF réels. Limites physiques/TalkBack et sauvegarde indépendante non confirmée toujours déclarées dans les notes publiques. Les paragraphes suivants conservent la chronologie de préparation.
 
 Le propriétaire a explicitement autorisé la publication. Sources poussées sur `main`. Première CI en échec car sdkmanager absent du PATH du runner ; installation explicite par action Android SDK épinglée ajoutée aux workflows compilation et release, puis CI réussie : https://github.com/Jhamende/Equily/actions/runs/38090796846, commit `690705e0399a25a1183d24f6e47ed203ad161889`. Compilation, tests unitaires et lint réussis ; API 35 : 18 tests recensés, 17 réussis, zéro échec, un ignoré (credential exige le harness PIN synthétique). Ne pas compter cet ignoré comme réussite : credential/SAF a été réellement exécuté dans les 18/18 de la suite API 26.
 

@@ -2,7 +2,7 @@
 
 Application Android native pour suivre localement les dépenses partagées après une séparation. EUR, français par défaut, néerlandais et anglais. Aucun compte, revenu obligatoire, serveur, publicité ou synchronisation. Package `be.equily.app`, version de développement `0.1.0` (1), Android 8.0/API 26 minimum, cible API 36.
 
-**État : candidate à la pré-release autorisée, vérification/publication GitHub en cours.** Les exigences de référence sont dans `EQUILY_CODEX_PROMPT.md`. Voir `PROGRESS.md` et `ACCEPTANCE.md` pour les preuves et les limites non testées. Ne pas présenter les déclarations comme des dettes reconnues juridiquement ou validées par l’autre personne. Aucun test matériel ni sauvegarde indépendante de clé prétendu réalisé.
+**Pré-release v0.1.0 publiée : [APK signé et checksum](https://github.com/Jhamende/Equily/releases/tag/v0.1.0).** Publication confirmée le 11 octobre 2026 après vérification GitHub Actions. Les exigences de référence sont dans `EQUILY_CODEX_PROMPT.md` ; preuves et limites dans `PROGRESS.md` et `ACCEPTANCE.md`. Ne pas présenter les déclarations comme des dettes reconnues juridiquement ou validées par l'autre personne. Aucun test matériel ni sauvegarde indépendante de clé prétendu réalisé.
 
 Validation locale : 38 tests unitaires et 18 tests Android réussis ensemble sur API 26, scénario complet hors ligne et restauration après désinstallation réelle. FR/NL/EN et clair/sombre vérifiés sur téléphone, tablette et police agrandie. Les limites d'appareil physique/accessibilité et les autorisations de publication restent explicites dans `ACCEPTANCE.md`.
 

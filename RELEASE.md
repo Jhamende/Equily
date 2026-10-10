@@ -1,6 +1,8 @@
 # Publication
 
-**Aucune release publiée à ce stade. Ne pas taguer `v0.1.0` avant tous les critères du brief et l’autorisation de publication.**
+**Pré-release v0.1.0 publiée le 11 octobre 2026 : https://github.com/Jhamende/Equily/releases/tag/v0.1.0.** Workflow de vérification et publication réussi : https://github.com/Jhamende/Equily/actions/runs/38091948293. Tag immuable sur `4b85c99bea6c3f4cffe266b725cc1f9d4ea4d17f` ; ne pas le déplacer pour une mise à jour documentaire ou binaire.
+
+APK public téléchargé et revérifié : 54467567 octets, SHA-256 `dcd1d262762effaedbbd00ffc2fdbbcdfaf8e220d48b2b1e0445e99e282da417`, signature v2 avec empreinte attendue, alignement ZIP/natif arm64/x86_64 16 Ko, source Git du tag, manifest min26/target36/code1/nondebuggable/noINTERNET. Le checksum de la release et le digest de l'asset GitHub correspondent. La compilation locale du même commit peut avoir un checksum différent ; seul ce checksum désigne l'APK publié.
 
 Artefact attendu : `Equily-v0.1.0-release.apk`. Package `be.equily.app`, version `0.1.0`, code 1. Tag `v0.1.0`, titre `Equily v0.1.0 — Initial Android Release`, statut pre-release. Android API 26 minimum ; FR/NL/EN. APK distribué sur https://github.com/Jhamende/Equily/releases uniquement après vérification.
 

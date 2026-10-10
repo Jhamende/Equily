@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 — candidate à la pré-release autorisée
+## 0.1.0 — 11 octobre 2026 (pré-release)
 
 - Projet Android natif Compose avec dossier local, alias/enfants facultatifs, dates, solde initial et parts exactes.
 - Registre dépenses/paiements/virements/contributions/remboursements/crédits, audit local et statuts non vérifiés.
@@ -20,7 +20,7 @@
 - Validation sans mutation des fichiers malformés, des données de démarrage et des règles hors capacité ; réessai après erreur sans effacement du dossier.
 - Restauration vérifiée après désinstallation réelle et réinstallation sur émulateur API 26, archive retenue hors app puis dossier synthétique et réouverture persistante vérifiés. Résultats et échecs intermédiaires dans `PROGRESS.md`.
 
-Le scénario complet hors ligne, les 18 tests Android ensemble et la restauration après désinstallation réelle sont réussis sur émulateur API 26. CI GitHub : compilation, tests unitaires et lint réussis ; API 35 : 17 tests réussis, zéro échec, un test credential ignoré faute de harness PIN (réellement exécuté sur API 26). Trois variantes d'affichage FR/NL/EN et clair/sombre sont vérifiées. Pré-release autorisée le 11 octobre 2026 ; publication réelle seulement après confirmation GitHub.
+Le scénario complet hors ligne, les 18 tests Android ensemble et la restauration après désinstallation réelle sont réussis sur émulateur API 26. CI GitHub : compilation, 38 tests unitaires et lint réussis ; API 35 : 17 tests réussis, zéro échec, un test credential ignoré faute de harness PIN (réellement exécuté sur API 26). Trois variantes d'affichage FR/NL/EN et clair/sombre sont vérifiées. Publication autorisée puis confirmée : https://github.com/Jhamende/Equily/releases/tag/v0.1.0 ; pipeline https://github.com/Jhamende/Equily/actions/runs/38091948293. APK public signé revérifié après téléchargement, SHA-256 `dcd1d262762effaedbbd00ffc2fdbbcdfaf8e220d48b2b1e0445e99e282da417`.
 
 ## Installation et limites connues
 

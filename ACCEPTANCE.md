@@ -28,3 +28,7 @@ GitHub CI evidence: https://github.com/Jhamende/Equily/actions/runs/38090796846 
 - Independent encrypted signing-key/password backup outside this server not confirmed; follow `RELEASE.md` and verify the restored public fingerprint.
 
 The brief requires disclosure of unavailable tests (§16) and instructions for independent encrypted key backup (§18); it does not require inventing physical hardware or declaring that an owner backup has already occurred. Earlier agent-added gates requiring separate confirmation of these disclosed facts are explicitly corrected here to match the brief and the owner's publication instruction. No technical verification or signature check is bypassed. Record actual publication only after GitHub confirms it.
+
+## Confirmed publication
+
+Pre-release https://github.com/Jhamende/Equily/releases/tag/v0.1.0 confirmed on 11 October 2026 (publishedAt 2026-10-10T22:45:55Z, Europe/Berlin 00:45:55). Verify and publish jobs both succeeded: https://github.com/Jhamende/Equily/actions/runs/38091948293. Tag/source commit `4b85c99bea6c3f4cffe266b725cc1f9d4ea4d17f`; uploaded APK and checksum downloaded and independently checked, certificate unchanged, source metadata matches tag. Published APK SHA-256 `dcd1d262762effaedbbd00ffc2fdbbcdfaf8e220d48b2b1e0445e99e282da417`. Physical tests and independent key backup remain explicitly unconfirmed, not retroactively certified by publication.
