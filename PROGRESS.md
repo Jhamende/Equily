@@ -1,5 +1,9 @@
 # Suivi vérifié — Equily
 
+## Publication autorisée le 11 octobre 2026
+
+Le propriétaire a explicitement autorisé la publication. Push des sources et CI distante en préparation ; pas encore de tag ni release. Confirmation demandée pour l'acceptation des limites physiques/TalkBack et pour la sauvegarde indépendante éprouvée de la clé. La porte d'acceptation reste fermée tant que ces points sont ouverts. Le bilan du 10 octobre ci-dessous décrit la livraison locale vérifiée.
+
 ## État au 10 octobre 2026
 
 Application native locale implémentée ; aucun push, tag ou release publique. Publication subordonnée à l'autorisation explicite du propriétaire et aux portes de `ACCEPTANCE.md`. Sauvegarde indépendante de la clé de signature non confirmée.
