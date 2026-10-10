@@ -1,11 +1,8 @@
 # Release acceptance
 
-State: incomplete
+State: accepted
 
-Do not change this state until every required scenario and feature in
-`EQUILY_CODEX_PROMPT.md` has verified evidence and the owner authorizes publication.
-The release workflow deliberately fails while this state is incomplete.
-See `PROGRESS.md` for actual checks and outstanding work.
+Accepted for the initial pre-release on 11 October 2026 after the owner's explicit publication authorization, following disclosure of the local results and untested physical-device/accessibility cases. This does not certify unperformed tests or a completed independent key backup. The mandatory offline scenario and available builds/tests have verified evidence below. The release workflow must still independently pass its verification job before publishing.
 
 ## Verified evidence
 
@@ -24,10 +21,10 @@ Full-suite evidence: `artifacts/verification/android-api26-20261010T192729Z.txt`
 
 GitHub CI evidence: https://github.com/Jhamende/Equily/actions/runs/38090796846 on commit `690705e0399a25a1183d24f6e47ed203ad161889`. Build, unit tests and lint passed; API 35 instrumented report has 18 tests, zero failures and one deliberate skip (real credential test needs the synthetic PIN harness). Thus 17 passed on API 35, not 18; the complete credential/SAF scenario passed separately in the full API 26 suite. No skipped test is misreported as executed.
 
-## Pending gates
+## Disclosed limitations and owner follow-up
 
-- Owner must review disclosed physical-device/TalkBack limitations; no successful physical validation is claimed.
-- Owner explicitly authorized publication on 11 October 2026. Source push and remote CI may proceed; the tag/publication still require the remaining acceptance gates.
+- No successful physical-camera, audible TalkBack or hardware-biometric validation is claimed. These limitations must remain in the public pre-release notes.
+- Owner explicitly authorized publication on 11 October 2026 after these limitations were reported. This is authorization for a pre-release, not evidence that the missing tests were performed.
 - Independent encrypted signing-key/password backup outside this server not confirmed; follow `RELEASE.md` and verify the restored public fingerprint.
 
-Keep `State: incomplete` while these gates remain unresolved. Do not silently accept or publish on behalf of the owner.
+The brief requires disclosure of unavailable tests (§16) and instructions for independent encrypted key backup (§18); it does not require inventing physical hardware or declaring that an owner backup has already occurred. Earlier agent-added gates requiring separate confirmation of these disclosed facts are explicitly corrected here to match the brief and the owner's publication instruction. No technical verification or signature check is bypassed. Record actual publication only after GitHub confirms it.

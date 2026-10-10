@@ -21,7 +21,8 @@ jobs:
       - run: |
           test -f ACCEPTANCE.md
           grep -qx 'State: accepted' ACCEPTANCE.md
-          ./gradlew :app:testDebugUnitTest :app:lintDebug
+          ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest
+          ./gradlew :app:lintDebug
       - run: sudo chmod 666 /dev/kvm
       - uses: reactivecircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808
         with:

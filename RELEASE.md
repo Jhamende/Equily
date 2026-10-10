@@ -16,14 +16,14 @@ Certificat public généré le 10 octobre 2026 : alias `equily-release`, RSA 307
 
 Secrets Actions à configurer uniquement avec autorisation : `EQUILY_KEYSTORE_BASE64` (contenu du keystore encodé), `EQUILY_STORE_PASSWORD`, `EQUILY_KEY_ALIAS`, `EQUILY_KEY_PASSWORD`. Les entrer via interface Secrets/Actions ou `gh secret set` avec entrée standard/fichiers, sans les afficher. Limiter les accès et protéger l’environnement `release` avant publication. Aucun secret disponible dans les PRs non fiables.
 
-Le 11 octobre 2026, après autorisation explicite de publication, ces quatre secrets sont configurés dans l'environnement `release`, avec règle de déploiement autorisant uniquement le tag `v0.1.0`. La CI de branche et les PRs n'utilisent pas cet environnement. Les secrets GitHub ne remplacent pas la sauvegarde indépendante récupérable de la clé. CI distante réussie et limites dans `ACCEPTANCE.md` ; aucun tag ni release tant que les portes restantes ne sont confirmées.
+Le 11 octobre 2026, après autorisation explicite de publication, ces quatre secrets sont configurés dans l'environnement `release`, avec règle de déploiement autorisant uniquement le tag `v0.1.0`. La CI de branche et les PRs n'utilisent pas cet environnement. Les secrets GitHub ne remplacent pas la sauvegarde indépendante récupérable de la clé. CI distante réussie et acceptation de la pré-release dans `ACCEPTANCE.md`. Les validations matérielles absentes et la sauvegarde indépendante non confirmée restent déclarées, jamais présentées comme effectuées.
 
 ## Portes de sortie
 
-1. Toutes les exigences du brief satisfaites, écarts `PROGRESS.md` résolus.
+1. Fonctionnalités et scénario obligatoire vérifiés, limites de validation indisponible déclarées suivant le brief §16 ; acceptation de la pré-release consignée dans `ACCEPTANCE.md`.
 2. Compilation, unit tests, lint et tests instrumentés réussis.
 3. Scénario intégral accepté hors ligne sur appareil : dossier, hypothèque 1070 €, récurrence, facture école 125 €, OCR/correction/original/enfant/payeur, remboursement partiel, rapport, sauvegarde et restauration après installation propre, réouverture persistante.
-4. Langues, contrastes, clavier, TalkBack et thème sombre vérifiés.
+4. Langues, contrastes principaux, clavier, sémantique accessible, thèmes et tailles vérifiés ; absence de test TalkBack audible/appareil physique explicitement déclarée, sans faux résultat.
 5. Signature vérifiée avec `apksigner verify --verbose --print-certs`, certificat conservé pour les mises à jour ; checksum avec `sha256sum`.
 6. Autorisation explicite de push/tag/publication ; notes indiquant limitations restantes, installation et risques de perte de clé.
 

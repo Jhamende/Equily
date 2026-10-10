@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 — en développement, non publié
+## 0.1.0 — candidate à la pré-release autorisée
 
 - Projet Android natif Compose avec dossier local, alias/enfants facultatifs, dates, solde initial et parts exactes.
 - Registre dépenses/paiements/virements/contributions/remboursements/crédits, audit local et statuts non vérifiés.
@@ -20,4 +20,13 @@
 - Validation sans mutation des fichiers malformés, des données de démarrage et des règles hors capacité ; réessai après erreur sans effacement du dossier.
 - Restauration vérifiée après désinstallation réelle et réinstallation sur émulateur API 26, archive retenue hors app puis dossier synthétique et réouverture persistante vérifiés. Résultats et échecs intermédiaires dans `PROGRESS.md`.
 
-Le scénario complet hors ligne, les 18 tests Android ensemble et la restauration après désinstallation réelle sont réussis sur émulateur API 26. Trois variantes d'affichage FR/NL/EN et clair/sombre sont vérifiées. Ce n'est pas une publication ni une validation sur appareil physique ; aucun tag public ou release acceptée à ce stade. Preuves et limites dans `PROGRESS.md`.
+Le scénario complet hors ligne, les 18 tests Android ensemble et la restauration après désinstallation réelle sont réussis sur émulateur API 26. CI GitHub : compilation, tests unitaires et lint réussis ; API 35 : 17 tests réussis, zéro échec, un test credential ignoré faute de harness PIN (réellement exécuté sur API 26). Trois variantes d'affichage FR/NL/EN et clair/sombre sont vérifiées. Pré-release autorisée le 11 octobre 2026 ; publication réelle seulement après confirmation GitHub.
+
+## Installation et limites connues
+
+- APK `Equily-v0.1.0-release.apk`, Android 8.0/API 26 minimum, français/néerlandais/anglais ; vérifier `SHA256SUMS` avant installation.
+- Tout fonctionne localement, sans compte ni permission INTERNET. Les statuts sont saisis par l'utilisateur, pas une approbation bilatérale ni une determination juridique.
+- Aucun appareil physique testé : photographie réelle, biométrie matérielle et TalkBack audible non vérifiés ; tests OCR synthétiques et credential/SAF Android sur émulateur ne les remplacent pas.
+- Stockage privé actif non globalement chiffré. Rapports PDF/CSV en clair ; archives de sauvegarde chiffrées. Sauvegarder avant désinstallation/changement de téléphone ; phrase perdue non récupérable.
+- Imports 25 Mo, PDF au plus 100 pages/10 analysées ; archives v2 au plus 1 Go avec espace temporaire requis, lecture v1 jusqu'à 100 Mo. Qualité OCR variable : revue obligatoire.
+- Clé de signature dédiée conservée hors dépôt, alias `equily-release`, certificat SHA-256 `8D:2B:64:7D:44:1C:E6:37:E5:BF:A3:E4:79:23:DD:B1:89:44:AA:EC:41:F8:5A:C5:17:60:90:7E:18:41:14:13`, expiration 2 octobre 2056. Propriétaire : sauvegarder keystore et mot de passe dans un coffre chiffré indépendant hors serveur et vérifier une copie selon `RELEASE.md`. Cette sauvegarde n'est pas confirmée ; les secrets Actions ne la remplacent pas.
