@@ -33,7 +33,7 @@ android {
     packaging { resources.excludes += setOf("META-INF/LICENSE*", "META-INF/NOTICE*", "META-INF/DEPENDENCIES") }
 }
 dependencies {
-    implementation(platform("androidx.compose:compose-bom:2025.11.01"))
+    implementation(platform("androidx.compose:compose-bom:2026.03.01"))
     implementation("androidx.activity:activity-compose:1.11.0")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-core")
@@ -46,14 +46,14 @@ dependencies {
     implementation("androidx.room:room-ktx:2.8.4")
     kapt("androidx.room:room-compiler:2.8.4")
     implementation("androidx.datastore:datastore-preferences:1.1.7")
-    implementation("com.google.mlkit:text-recognition:16.0.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
+    implementation("com.github.adaptech-cz.Tesseract4Android:tesseract4android:4.9.0")
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
     implementation("com.google.crypto.tink:tink-android:1.21.0")
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("androidx.fragment:fragment-ktx:1.8.9")
+    implementation("androidx.exifinterface:exifinterface:1.4.2")
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.11.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2026.03.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.room:room-testing:2.8.4")

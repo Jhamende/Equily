@@ -1,4 +1,35 @@
 <resources>
+    <string name="unallocated">Sans affectation à une dépense</string>
+    <string name="credit_help">Un crédit sans affectation est enregistré sans modifier le partage ni le solde entre personnes. Les remboursements de mutuelle, allocations familiales ou autres crédits ne réduisent une dépense que si vous l’affectez explicitement.</string>
+    <string name="home">Accueil</string>
+    <string name="not_established">Règlement non établi (brouillon, contestation ou source incomplète)</string>
+    <string name="scan_resume">Ce scan non enregistré a été interrompu par le redémarrage de l’application. Importez à nouveau l’original avant d’enregistrer une facture.</string>
+    <string name="initialization_failed">Dossier indisponible</string>
+    <string name="initialization_help">Le dossier local n’a pas pu être ouvert. Aucune donnée n’a été effacée. Vérifiez l’espace libre, redémarrez le téléphone et conservez vos sauvegardes avant toute désinstallation.</string>
+    <string name="retry">Réessayer</string>
+    <string name="passphrase_resume">La phrase secrète n’est jamais conservée après recréation de l’écran. Saisissez-la à nouveau pour terminer l’opération sur le fichier sélectionné.</string>
+    <string name="resume_operation">Terminer l’opération en attente</string>
+    <string name="shared_cash">Flux connu du compte commun (cumul)</string>
+    <string name="transfers_sent">Virements envoyés ce mois</string>
+    <string name="transfers_received">Virements reçus ce mois</string>
+    <string name="children_other">Enfants : autres</string>
+    <string name="financial">Frais financiers</string>
+    <string name="initial_payment">Montant déjà payé (vide = total)</string>
+    <string name="lock_setup">Configurez un code de verrouillage Android dans les réglages système, puis revenez déverrouiller Equily.</string>
+    <string name="end_recurring">Terminer cette récurrence</string>
+    <string name="zoom_in">Agrandir</string>
+    <string name="zoom_out">Réduire</string>
+    <string name="settlement_status">État du règlement</string>
+    <string name="invoice_supplier">Fournisseur (facultatif)</string>
+    <string name="invoice_number">Numéro de facture (facultatif)</string>
+    <string name="yes">Oui</string>
+    <string name="no">Non</string>
+    <string name="report_scope">Les dépenses sont sélectionnées par leur date ; les paiements affectés incluent leurs règlements ultérieurs. Les virements non affectés sont limités à la période. Le solde initial est exclu de ce rapport de période.</string>
+    <string name="dossier">Mon dossier</string>
+    <string name="categories">Personnaliser les catégories</string>
+    <string name="category_name">Nom de catégorie</string>
+    <string name="new_category">Ajouter une catégorie avec ce nom</string>
+    <string name="category_help">Renommez les catégories ou ajoutez-en. Archiver masque une catégorie dans les nouveaux formulaires, sans modifier les dépenses historiques.</string>
     <string name="anchor_day">Jour d’échéance (vide = jour de début)</string>
     <string name="recurring_revision_help">Une révision ne modifie pas les échéances déjà créées. Choisissez une date après leur dernière échéance. La pause exclut les échéances futures jusqu’à la reprise, sans supprimer les dépenses existantes.</string>
     <string name="multiple_allocations">Répartir ce paiement sur plusieurs dépenses (la somme doit égaler le montant)</string>
@@ -118,8 +149,8 @@
     <string name="success">Opération terminée.</string>
     <string name="error">Impossible de terminer. Vérifiez les champs, le fichier, l’espace disponible ou la phrase secrète.</string>
     <string name="working">Traitement local…</string>
-    <string name="previous">Mois précédent</string>
-    <string name="next">Mois suivant</string>
+    <string name="previous">Précédent</string>
+    <string name="next">Suivant</string>
     <string name="back">Retour</string>
     <string name="general">Général</string>
     <string name="medical">Médical</string>
@@ -135,4 +166,5 @@
     <string name="utilities">Charges et énergie</string>
     <string name="occupancy">Indemnité d’occupation</string>
     <string name="duplicate">Original déjà présent : vérifiez qu’il ne s’agit pas d’un doublon.</string>
+    <string name="licenses">Licences</string>
 </resources>

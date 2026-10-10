@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 val android.content.Context.preferences by preferencesDataStore("settings")
 data class Preferences(val language: String = "fr", val theme: String = "system", val lock: Boolean = false)
@@ -27,6 +28,7 @@ class EquilyModel(application: Application) : AndroidViewModel(application) {
     val reports = Reports(application)
     val snapshot = MutableStateFlow(Snapshot(emptyList()))
     val ready = MutableStateFlow(false)
+    val initializationFailed = MutableStateFlow(false)
     val preferencesReady = MutableStateFlow(false)
     val busy = MutableStateFlow(false)
     val message = MutableStateFlow<Int?>(null)
@@ -38,6 +40,7 @@ class EquilyModel(application: Application) : AndroidViewModel(application) {
     var scanCandidate: InvoiceCandidate? = null
     var scanFailed = false
     var scanDuplicate = false
+    private var initializationJob: kotlinx.coroutines.Job? = null
     init {
         viewModelScope.launch {
             application.preferences.data.collect {
@@ -47,15 +50,26 @@ class EquilyModel(application: Application) : AndroidViewModel(application) {
                 preferencesReady.value = true
             }
         }
-        viewModelScope.launch(Dispatchers.IO) {
-            backups.cleanupStaging()
-            repository.refreshRecurring()
-            repository.snapshots.collect { snapshot.value = it; ready.value = true }
+        initialize()
+    }
+    fun initialize() {
+        initializationJob?.cancel()
+        initializationFailed.value = false
+        initializationJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                backups.cleanupStaging()
+                repository.snapshot().validate()
+                java.io.File(getApplication<Application>().cacheDir, "camera").listFiles()?.filter { it.isFile && it.name.matches(Regex("[0-9a-f-]{36}\\.jpg")) && it.lastModified() < System.currentTimeMillis() - 86400000L }?.forEach { it.delete() }
+                repository.snapshot().documents.filter { it.temporary }.forEach { attachments.remove(it) }
+                repository.refreshRecurring()
+                repository.snapshots.collect { current -> current.validate(); withContext(Dispatchers.Main.immediate) { snapshot.value = current; ready.value = true } }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+            catch (_: Exception) { withContext(Dispatchers.Main.immediate) { initializationFailed.value = true } }
         }
     }
     fun refresh() {
         viewModelScope.launch(Dispatchers.IO) {
-            try { repository.refreshRecurring() } catch (_: Exception) { message.value = R.string.error }
+            try { repository.refreshRecurring() } catch (_: Exception) { withContext(Dispatchers.Main.immediate) { message.value = R.string.error } }
         }
     }
     fun perform(after: () -> Unit = {}, notify: Boolean = true, action: suspend () -> Unit) {
@@ -66,7 +80,8 @@ class EquilyModel(application: Application) : AndroidViewModel(application) {
                 kotlinx.coroutines.withContext(Dispatchers.IO) { action() }
                 if (notify) message.value = R.string.success
                 after()
-            } catch (_: Exception) { message.value = R.string.error }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+            catch (_: Exception) { message.value = R.string.error }
             finally { busy.value = false }
         }
     }
@@ -76,12 +91,24 @@ class EquilyModel(application: Application) : AndroidViewModel(application) {
     fun lockEnabled(enabled: Boolean) = perform {
         getApplication<Application>().preferences.edit { it[booleanPreferencesKey("lock")] = enabled }
     }
-    fun scan(uri: Uri, after: () -> Unit) = perform(after, notify = false) {
-        val document = attachments.import(uri, null)
+    fun discardScan() {
+        val document = scanDocument
+        scanDocument = null; scanCandidate = null; scanFailed = false; scanDuplicate = false
+        if (document?.temporary == true) viewModelScope.launch(Dispatchers.IO) {
+            try { attachments.remove(document) } catch (_: Exception) { withContext(Dispatchers.Main.immediate) { message.value = R.string.error } }
+        }
+    }
+    fun scan(uri: Uri, after: () -> Unit, cameraFile: java.io.File? = null) {
+        if (busy.value) { cameraFile?.delete(); message.value = R.string.working; return }
+        perform(after, notify = false) {
+        scanDocument?.takeIf { it.temporary }?.let { attachments.remove(it) }
+        scanDocument = null
+        val document = try { attachments.import(uri, null, temporary = true) } finally { cameraFile?.delete() }
         scanDocument = document
         scanDuplicate = repository.snapshot().documents.any { it.hash == document.hash && it.chargeId != null }
         scanCandidate = null
         scanFailed = false
-        try { scanCandidate = attachments.extract(document) } catch (_: Exception) { scanFailed = true }
+        try { scanCandidate = attachments.extract(document) } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled } catch (_: Exception) { scanFailed = true }
+        }
     }
 }

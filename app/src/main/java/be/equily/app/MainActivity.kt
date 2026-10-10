@@ -28,6 +28,11 @@ class MainActivity : FragmentActivity() {
     }
     private fun canLock(): Boolean = if (Build.VERSION.SDK_INT < 30) getSystemService(KeyguardManager::class.java).isDeviceSecure else BiometricManager.from(this).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS
     private fun unlock() {
+        if (!canLock()) {
+            model.message.value = R.string.lock_setup
+            startActivity(android.content.Intent(android.provider.Settings.ACTION_SECURITY_SETTINGS))
+            return
+        }
         if (Build.VERSION.SDK_INT < 30) {
             val intent = getSystemService(KeyguardManager::class.java).createConfirmDeviceCredentialIntent(getString(R.string.app_name), getString(R.string.unlock))
             if (intent != null) credential.launch(intent)
@@ -35,6 +40,9 @@ class MainActivity : FragmentActivity() {
         }
         val prompt = BiometricPrompt(this, ContextCompat.getMainExecutor(this), object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) { model.locked.value = false }
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                if (errorCode !in listOf(BiometricPrompt.ERROR_USER_CANCELED, BiometricPrompt.ERROR_CANCELED, BiometricPrompt.ERROR_NEGATIVE_BUTTON)) model.message.value = R.string.error
+            }
         })
         prompt.authenticate(BiometricPrompt.PromptInfo.Builder()
             .setTitle("Equily")

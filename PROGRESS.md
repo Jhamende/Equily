@@ -1,5 +1,13 @@
 # Suivi vérifié — Equily
 
+## État courant de la continuation
+
+Les sections historiques ci-dessous décrivent des étapes successives, pas des preuves cumulées de réussite globale. Dernier build debug/APK de tests/lint réussi : 38 tests unitaires, zéro échec, heap de tests 64 Mo ; lint sans erreur. Scénario complet des écrans réussi dans une exécution ciblée antérieure. Six captures FR/NL/EN × clair/sombre réussies après le nouveau placement du bouton d’ajout et des actions rapides ; examen visuel FR/NL/EN effectué sur écran 320 × 640. Contrastes calculés pour huit couples texte/fond principaux : ratios de 7,05 à 15,04, sans prétendre certifier chaque état de chaque contrôle.
+
+**Credential et retour SAF réel réussis : 1 test, 126,042 secondes.** Annulation, authentification par PIN Android, FLAG_SECURE, sélection tactile dans DocumentsUI, copie/import/OCR du PNG 125 € pendant que le dossier reste inaccessible, puis seconde authentification et revue de facture vérifiés. Aucun résultat de sélecteur injecté ni déverrouillage applicatif simulé dans ce test. Les échecs précédents concernaient la restitution du focus, une commande de préparation traitée sans interpréteur shell et l’action d’accessibilité non implémentée par une ligne du sélecteur Android 8 ; la préparation est vérifiée et la navigation externe utilise maintenant de vrais événements tactiles.
+
+La suite complète, la restauration après désinstallation sur le code final, les grandes tailles/polices et l’APK release final restent à vérifier dans cette continuation. Aucun push/tag/publication autorisé ; sauvegarde indépendante de la clé non confirmée. L’ancien APK dans `artifacts` n’est pas une livraison de la source actuelle.
+
 ## Plan
 
 1. Inspecter dépôt et environnement (fait : dépôt distant vide, JDK/SDK disponibles).
@@ -24,17 +32,42 @@
 - Affectations multiples implémentées et testées en calcul : une transaction conserve son total et ses affectations exactes ; vérifier la saisie sur appareil.
 - Remboursements partiels et crédits reçus avant paiement couverts par tests ; flux mixtes compte commun/personnels à éprouver sur appareil. Le compte commun est volontairement qualifié.
 - Récurrences : pauses datées sans rattrapage, jour ancré explicite, enfant/notes conservés, prévention des doubles templates depuis une dépense et révisions rejetées si elles recouvrent une échéance existante. Tests unitaires et intégration Android réussis. Regroupement visuel des versions et revue du parcours de configuration à améliorer.
-- Accords : règles datées et documents associés disponibles ; édition et présentation historique des versions à compléter.
-- Filtres annuels, indicateur animé des paiements fournisseurs et solde détaillé par dépense présents ; rapports annuels et présentation graphique à améliorer.
-- Prévisualisation intégrée images/PDF avec pagination présente ; orientation EXIF des photos et zoom à compléter.
-- Retrait de document nettoie le fichier si non référencé, restauration nettoie les pièces remplacées. Nettoyage des fichiers caméra et imports abandonnés à finaliser ; préférences du téléphone hors archive.
-- UX : examen visuel, contrastes, TalkBack, petites/grandes tailles, NL/EN et clavier à valider sur appareil. Catégories prédéfinies présentes ; personnalisation des noms/listes et édition du dossier à compléter.
+- Accords : édition et versions auditées désormais présentes ; vérification des corrections sans recalcul rétroactif et conflits catégorie/date réussie en intégration Android.
+- Filtres annuels/enfant/règlement, indicateur animé des paiements fournisseurs, graphique annuel et solde détaillé par dépense présents ; parcours et présentation à valider ensemble.
+- Prévisualisation intégrée images/PDF avec pagination, orientation EXIF et zoom présente. Test d’orientation JPEG et OCR des PDF texte/image réussi ; gestes de zoom à examiner sur appareil.
+- Retrait de document nettoie le fichier si non référencé, restauration nettoie les pièces remplacées. Scans abandonnés marqués temporaires/nettoyés et photos caméra nettoyées au retour ; préférences du téléphone hors archive.
+- UX : examen visuel, contrastes, TalkBack, petites/grandes tailles, NL/EN et clavier à valider sur appareil. Catégories personnalisables et dossier éditable présents, compatibilité JSON testée ; pages bornées à 720 dp et espace clavier pris en compte.
 - Verrouillage : code appareil prévu pour API 26–29, biométrie/code pour API 30+. Navigation, formulaires et lanceurs Activity Result conservés sous masque opaque sans contenu accessible ; test Compose de conservation et interception du retour réussi. Retour de sélecteur externe réel, rotation/processus et biométrie physique restent à éprouver.
-- Rapports : exports mensuels présents ; pagination, localisation des en-têtes PDF et rapports annuels à améliorer. Détection de doublons par métadonnées de facture à compléter au-delà du hash de fichier.
+- Rapports : mensuels/annuels localisés, pagination mesurée et métadonnées de facture présents. Calcul et localisation vérifiés ; fixture multi-page corrigée, parcours complet des exports en cours.
 - Schéma Room v1 exporté ; aucune ancienne version à migrer. Prévoir une vraie migration et son test lors du prochain schéma.
 - Clé dédiée créée hors dépôt ; dernier APK release signé vérifié avec apksigner (v2), empreinte dans RELEASE.md. Manifestes debug/release vérifiés : aucune permission INTERNET. Workflows CI et release écrits et YAML parsé, pas exécutés sur GitHub. Aucune publication tant que scénario complet et autorisation manquent.
 
+## Compléments en cours du 10 octobre 2026
+
+- Implémentation : édition du dossier, noms/listes de catégories compatibles JSON ancien, édition/audit des accords, conflit catégorie/date rejeté transactionnellement ; règlements dérivés et filtres enfant/règlement, graphique annuel ; rapports annuels/localisés, pagination à largeur mesurée et CSV neutralisant aussi les formules précédées de contrôles/espaces.
+- OCR : fournisseur/numéro/référence/catégorie proposés et corrigibles, métadonnées persistées et doublon possible signalé ; EXIF et zoom ; scans temporaires nettoyés à l’abandon/démarrage, photos caméra nettoyées au retour. Pause/reprise/fin avec date choisie. État ordinaire des formulaires sauvegardable, jamais les secrets ; fichier sélectionné repris après ressaisie si recréation.
+- 33 tests unitaires réussis sous heap 64 Mo (17 registre, 7 crypto, 5 parsing, 2 CSV, 2 règlement). Build debug/tests et lint réussis avant la dernière mise à jour Compose.
+- Nouveaux tests Android : compatibilité des catégories/métadonnées/accords et OCR PDF texte/image avec orientation JPEG réussis. Rapport annuel : calcul/localisation/affectations vérifiés, assertion de pagination échouée car le texte synthétique n’exigeait qu’une page ; fixture allongée pour éprouver plusieurs pages. Parcours intégral UI en cours : première tentative interrompue par crash SlotTable à la destruction. Aucun succès inventé de ce parcours.
+- BOM Compose 2026.09.00 (runtime/UI 1.12.1) disponible vérifié sur Google Maven, mais build refusé par ses exigences SDK 37/AGP 9.1+. BOM compatible 2026.03.01 (runtime/UI 1.10.6) retenu ; compilation et réexécution en cours sans drapeau expérimental. Cause du crash non attribuée définitivement.
+- Le passage à 1.10.6 n’a pas suffi : journaux de la deuxième tentative identifient une invalidation de focus/sémantique hors thread principal, déclenchée par la publication du snapshot Room depuis IO sous l’intercepteur de frames des tests Compose. État de présentation désormais publié sur `Dispatchers.Main.immediate`, lectures Room conservées sur IO. Même protection pour les erreurs et sélection de catégorie après écriture.
+- Après correction : 34 tests unitaires réussis, build debug/tests et lint réussis (0 erreur, 29 avertissements). Test Android de recréation de l’Activity réussi : description/montant/enfant conservés, phrase secrète non sauvegardée. Parcours complet des écrans toujours en cours de réexécution ; aucun succès global présumé.
+- Réexécution UI : recréation et parcours initial/verrouillage simulé réussis, sans crash ; scénario complet arrêté sur sélection du payeur. Diagnostic des sources Compose : les popups créent un propriétaire Android avec le contexte système, réinitialisant les ressources dérivées vers l’anglais malgré l’écran français. Ressources localisées désormais fournies explicitement par `LocalResources` pour les menus/dialogues. Gestion clavier/insets renforcée (`adjustResize`, consommation des insets Scaffold, clavier fermé à l’ouverture des choix). Réexécution requise.
+
 ## Reprise
+
+### Vérifications supplémentaires en cours
+
+- **Parcours complet UI réussi** dans la dernière exécution ciblée : dossier/enfant, hypothèque 1070 € payée personnellement et récurrence, import PNG 125 € reconnu hors ligne puis correction, original/enfant/payeur, transfert partiel 200 €, solde 397,50 €, CSV/PDF via contrats de sélection, sauvegarde chiffrée via écran, restauration vers base vide et égalité des enregistrements/hashes/solde. La suite ciblée de deux tests garde **un échec de credential**, donc ne constitue pas un succès global.
+- L’import était effectivement en traitement à l’expiration de la limite de test de 60 secondes ; la reconnaissance sur cet émulateur sans KVM dispose maintenant de 180 secondes. Le blocage suivant était un appui sur le bouton PDF pendant la notification de réussite du CSV ; le test attend désormais sa disparition avant la prochaine action tactile.
+- Credential réelle : ouverture du dialogue Android confirmée, mais première annulation attendait le retour après un seul appui retour alors que celui-ci masquait d’abord le clavier. Deux appuis sont désormais testés ; authentification et retour SAF réel restent à réexécuter, sans succès présumé.
+- Validation des snapshots sur IO avant publication : les corps invalides déclenchent la page d’erreur/réessai, sans effacement. Nouveau test dédié en préparation. Imports JPEG/PNG validés par dimensions/type du décodeur et PDF par nombre de pages avant écriture ; nouveau test de documents malformés/101 pages, et PDF mixte texte/image ajouté. Captures de six combinaisons FR/NL/EN × clair/sombre prévues.
+- Dernier build exécuté : 36 tests unitaires réussis, debug/APK de tests et lint (0 erreur, 28 avertissements). Derniers ajouts ci-dessus encore à compiler/réexécuter avant validation finale.
+
+- Build debug/tests et lint réussis en 151 secondes après ajout des crédits non affectés : **36 tests unitaires, zéro échec**, heap de tests 64 Mo. Les deux nouveaux tests vérifient qu’un avantage facultatif ne modifie le partage que lorsqu’il est explicitement affecté, et qu’un crédit au compte commun change seulement sa trésorerie.
+- Audit confidentialité : retrait complet de ML Kit/coroutines Play Services, remplacés par Tesseract4Android 4.9.0 et modèles `tessdata_fast` FR/NL/EN embarqués, empreintes épinglées. Manifeste APK debug vérifié : biométrie/empreinte et permission interne AndroidX seulement, aucune permission INTERNET ou accès réseau/stockage général. Licences upstream conservées dans les assets.
+- **Trois tests Android réussis avec le nouveau moteur** : PDF texte/PDF image OCR 125 € et orientation originale préservée ; rapports annuels NL/CSV avec pagination et affectations inter-périodes ; compatibilité JSON ancien et accords transactionnels. Test de recréation et quatre captures visuelles FR/NL/EN clair/sombre réussis avant les derniers ajustements visuels. FLAG_SECURE reste actif, les captures utilisent le rendu de la propre View synthétique.
+- Le scénario complet UI atteint l’import après dossier/hypothèque/payeur/récurrence, mais reste en échec sur le retour simulé du sélecteur. Le moniteur de résultat a été corrigé pour intercepter directement `onStartActivity` ; réexécution en cours. Ne pas présenter cela comme un succès de parcours ou de SAF externe réel.
+- Aucun push/tag/publication ; autorisation du propriétaire et confirmation d’une sauvegarde indépendante de clé toujours attendues. APK release précédent non actualisé à ces changements, ne pas le présenter comme livraison finale.
 
 Lire ce fichier et `EQUILY_CODEX_PROMPT.md`, vérifier l’état Git et exécuter les commandes de `DEVELOPMENT.md`. Examiner les rapports de tests et lint. Conserver la clé de signature existante ; ne jamais la recréer. Mettre à jour ce suivi avec des résultats effectifs, jamais des suppositions.
 

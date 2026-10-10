@@ -1,4 +1,35 @@
 <resources>
+    <string name="unallocated">Not allocated to an expense</string>
+    <string name="credit_help">An unallocated credit is recorded without changing expense shares or the balance between people. Mutual-insurance refunds, family allowances and other credits reduce an expense only when you explicitly allocate them.</string>
+    <string name="home">Home</string>
+    <string name="not_established">Settlement not established (draft, dispute or incomplete source)</string>
+    <string name="scan_resume">This unsaved scan was interrupted by an application restart. Import the original again before saving an invoice.</string>
+    <string name="initialization_failed">Dossier unavailable</string>
+    <string name="initialization_help">The local dossier could not be opened. No data was deleted. Check free storage, restart the phone and keep your backups before uninstalling.</string>
+    <string name="retry">Try again</string>
+    <string name="passphrase_resume">The passphrase is never retained after screen recreation. Enter it again to finish the operation on the selected file.</string>
+    <string name="resume_operation">Finish pending operation</string>
+    <string name="shared_cash">Known shared-account cash flow (cumulative)</string>
+    <string name="transfers_sent">Transfers sent this month</string>
+    <string name="transfers_received">Transfers received this month</string>
+    <string name="children_other">Children: other</string>
+    <string name="financial">Financial fees</string>
+    <string name="initial_payment">Amount already paid (empty = total)</string>
+    <string name="lock_setup">Set up an Android screen-lock credential in system settings, then return to unlock Equily.</string>
+    <string name="end_recurring">End this recurrence</string>
+    <string name="zoom_in">Zoom in</string>
+    <string name="zoom_out">Zoom out</string>
+    <string name="settlement_status">Settlement status</string>
+    <string name="invoice_supplier">Supplier (optional)</string>
+    <string name="invoice_number">Invoice number (optional)</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="report_scope">Expenses are selected by expense date, including later allocated settlements. Unallocated transfers are limited to the period. The opening balance is excluded from this period report.</string>
+    <string name="dossier">My dossier</string>
+    <string name="categories">Customize categories</string>
+    <string name="category_name">Category name</string>
+    <string name="new_category">Add a category with this name</string>
+    <string name="category_help">Rename or add categories. Archiving hides a category in new forms without changing historical expenses.</string>
     <string name="anchor_day">Due day (empty = start day)</string>
     <string name="recurring_revision_help">A revision does not change charges already created. Choose a date after their latest due date. Pausing skips future charges until resumption, without removing existing expenses.</string>
     <string name="multiple_allocations">Allocate this payment across expenses (sum must equal amount)</string>
@@ -118,8 +149,8 @@
     <string name="success">Operation completed.</string>
     <string name="error">Could not complete. Check fields, file, available space or passphrase.</string>
     <string name="working">Processing locally…</string>
-    <string name="previous">Previous month</string>
-    <string name="next">Next month</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
     <string name="back">Back</string>
     <string name="general">General</string>
     <string name="medical">Medical</string>
@@ -135,4 +166,5 @@
     <string name="utilities">Utilities</string>
     <string name="occupancy">Occupancy compensation</string>
     <string name="duplicate">Original already present: check for a duplicate expense.</string>
+    <string name="licenses">Licenses</string>
 </resources>

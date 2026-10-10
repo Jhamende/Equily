@@ -3,6 +3,8 @@ package be.equily.app.data
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import androidx.exifinterface.media.ExifInterface
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.ParcelFileDescriptor
@@ -11,9 +13,6 @@ import be.equily.app.domain.BackupCrypto
 import be.equily.app.domain.copyLimited
 import be.equily.app.domain.InvoiceCandidate
 import be.equily.app.domain.InvoiceParser
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
@@ -27,7 +26,6 @@ import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
@@ -61,6 +59,15 @@ fun InputStream.readLimited(limit: Int): ByteArray {
 class AttachmentStore(private val context: Context, private val repository: LocalRepository, val directory: File = File(context.filesDir, "attachments")) {
     init { directory.mkdirs() }
     fun file(document: Document) = File(directory, document.hash)
+    private fun orient(bitmap: Bitmap, original: File): Bitmap {
+        val exif = ExifInterface(original)
+        if (!exif.isFlipped && exif.rotationDegrees == 0) return bitmap
+        val matrix = Matrix().apply {
+            if (exif.isFlipped) postScale(-1f, 1f)
+            postRotate(exif.rotationDegrees.toFloat())
+        }
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true).also { if (it !== bitmap) bitmap.recycle() }
+    }
     suspend fun preview(document: Document, pageIndex: Int): Pair<Bitmap, Int> = withContext(Dispatchers.IO) {
         if (document.mime == "application/pdf") {
             ParcelFileDescriptor.open(file(document), ParcelFileDescriptor.MODE_READ_ONLY).use { descriptor ->
@@ -81,13 +88,13 @@ class AttachmentStore(private val context: Context, private val repository: Loca
             require(bounds.outWidth in 1..20000 && bounds.outHeight in 1..20000)
             var sample = 1
             while (maxOf(bounds.outWidth, bounds.outHeight) / sample > 1600) sample *= 2
-            requireNotNull(BitmapFactory.decodeFile(file(document).path, BitmapFactory.Options().apply { inSampleSize = sample })) to 1
+            orient(requireNotNull(BitmapFactory.decodeFile(file(document).path, BitmapFactory.Options().apply { inSampleSize = sample })), file(document)) to 1
         }
     }
     suspend fun remove(document: Document) = withContext(Dispatchers.IO) {
         repository.removeDocument(document.id) { hash -> File(directory, hash).delete() }
     }
-    suspend fun import(uri: Uri, chargeId: String?): Document = withContext(Dispatchers.IO) {
+    suspend fun import(uri: Uri, chargeId: String?, temporary: Boolean = false): Document = withContext(Dispatchers.IO) {
         val bytes = requireNotNull(context.contentResolver.openInputStream(uri)).use { it.readLimited(25_000_000) }
         val mime = when {
             bytes.take(5).toByteArray().contentEquals("%PDF-".toByteArray()) -> "application/pdf"
@@ -95,43 +102,58 @@ class AttachmentStore(private val context: Context, private val repository: Loca
             bytes.size > 3 && bytes[0] == 0xff.toByte() && bytes[1] == 0xd8.toByte() -> "image/jpeg"
             else -> error("Unsupported file")
         }
+        if (mime == "application/pdf") {
+            PDFBoxResourceLoader.init(context)
+            PDDocument.load(bytes).use { require(it.numberOfPages in 1..100) }
+        } else {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+            require(bounds.outWidth in 1..20000 && bounds.outHeight in 1..20000 && bounds.outMimeType == mime)
+        }
         val hash = sha256(bytes)
-        val duplicate = repository.snapshot().documents.firstOrNull { it.hash == hash && it.chargeId == chargeId }
-        if (duplicate != null) return@withContext duplicate
+        val duplicate = repository.snapshot().documents.firstOrNull { it.hash == hash && it.chargeId == chargeId && !it.temporary }
+        if (duplicate != null) {
+            require(file(duplicate).length() == duplicate.size && sha256(file(duplicate)) == duplicate.hash)
+            return@withContext duplicate
+        }
         val destination = File(directory, hash)
-        val document = Document(UUID.randomUUID().toString(), chargeId, mime, hash, bytes.size.toLong())
-        repository.saveBatch(listOf(Codec.record(document))) {
+        val document = Document(UUID.randomUUID().toString(), chargeId, mime, hash, bytes.size.toLong(), temporary)
+        var installed = false
+        repository.saveBatch(listOf(Codec.record(document)), beforeWrite = {
+            if (destination.exists()) require(destination.length() == document.size && sha256(destination) == document.hash)
             if (!destination.exists()) {
                 val temporary = File(directory, ".${UUID.randomUUID()}")
-                temporary.writeBytes(bytes)
-                check(temporary.renameTo(destination))
+                try {
+                    temporary.writeBytes(bytes)
+                    check(temporary.renameTo(destination))
+                    installed = true
+                } finally { temporary.delete() }
             }
-        }
+        }, rollback = { if (installed) destination.delete() })
         document
     }
     suspend fun extract(document: Document): InvoiceCandidate = withContext(Dispatchers.IO) {
         val original = file(document)
-        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        val recognizer = OfflineOcr(context)
         try {
             val text = if (document.mime == "application/pdf") {
                 PDFBoxResourceLoader.init(context)
-                val embedded = PDDocument.load(original).use { pdf ->
+                PDDocument.load(original).use { pdf ->
                     require(pdf.numberOfPages in 1..100)
-                    PDFTextStripper().apply { endPage = 10 }.getText(pdf)
-                }
-                if (embedded.trim().length >= 20) embedded else {
                     ParcelFileDescriptor.open(original, ParcelFileDescriptor.MODE_READ_ONLY).use { descriptor ->
                         PdfRenderer(descriptor).use { renderer ->
                             require(renderer.pageCount in 1..100)
                             val texts = mutableListOf<String>()
                             for (index in 0 until minOf(renderer.pageCount, 10)) {
+                                val embedded = PDFTextStripper().apply { startPage = index + 1; endPage = index + 1 }.getText(pdf)
+                                if (embedded.trim().length >= 20) { texts += embedded; continue }
                                 renderer.openPage(index).use { page ->
                                     val scale = minOf(2.0, 2048.0 / maxOf(page.width, page.height))
                                     val bitmap = Bitmap.createBitmap((page.width * scale).toInt().coerceAtLeast(1), (page.height * scale).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
                                     try {
                                         bitmap.eraseColor(android.graphics.Color.WHITE)
                                         page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                                        texts += recognizer.process(InputImage.fromBitmap(bitmap, 0)).await().text
+                                        texts += recognizer.recognize(bitmap)
                                     } finally { bitmap.recycle() }
                                 }
                             }
@@ -145,8 +167,8 @@ class AttachmentStore(private val context: Context, private val repository: Loca
                 require(bounds.outWidth in 1..20000 && bounds.outHeight in 1..20000)
                 var sample = 1
                 while (maxOf(bounds.outWidth, bounds.outHeight) / sample > 2048) sample *= 2
-                val bitmap = requireNotNull(BitmapFactory.decodeFile(original.path, BitmapFactory.Options().apply { inSampleSize = sample }))
-                try { recognizer.process(InputImage.fromBitmap(bitmap, 0)).await().text } finally { bitmap.recycle() }
+                val bitmap = orient(requireNotNull(BitmapFactory.decodeFile(original.path, BitmapFactory.Options().apply { inSampleSize = sample })), original)
+                try { recognizer.recognize(bitmap) } finally { bitmap.recycle() }
             }
             InvoiceParser.parse(text)
         } finally { recognizer.close() }

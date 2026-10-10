@@ -6,11 +6,11 @@ Ubuntu/Linux x86_64, Java OpenJDK 17, SDK `/opt/android-sdk`, plateformes 33–3
 
 ## Versions reproductibles
 
-Gradle Wrapper 8.13, AGP 8.13.1, Kotlin/Compose compiler 2.2.10, Compose BOM 2025.11.01 (runtime/UI 1.9.5), Room 2.8.4, SDK compile/target 36, min 26. Versions stables compatibles choisies pour le Java/SDK/AGP déjà présents ; ce ne sont pas nécessairement les dernières versions stables publiées. Métadonnées Google/Maven vérifiées. La branche Compose 1.9 est mise à jour après un crash de la table de composition pendant le test UI ; cette mise à jour ne vaut pas validation de sa résolution. Dépendances téléchargées à la compilation uniquement ; aucune acquisition de modèle OCR à l’exécution.
+Gradle Wrapper 8.13, AGP 8.13.1, Kotlin/Compose compiler 2.2.10, Compose BOM 2026.03.01 (runtime/UI 1.10.6), Room 2.8.4, SDK compile/target 36, min 26. Versions stables compatibles choisies pour le Java/SDK/AGP déjà présents ; ce ne sont pas nécessairement les dernières versions stables publiées. Métadonnées Google/Maven vérifiées. Le BOM 2026.09.00 a été évalué puis rejeté : ses AAR exigent SDK 37 et AGP 9.1+, incompatibles avec la chaîne choisie. Le BOM 2026.03.01 inclut les correctifs stables de runtime 1.10.6 ; cela ne vaut pas preuve de résolution du crash UI avant réexécution. Orientation JPEG/PNG avec ExifInterface 1.4.2. Dépendances téléchargées à la compilation uniquement ; aucune acquisition de modèle OCR à l’exécution.
 
 Sauvegardes segmentées : `tink-android:1.21.0`, version publiée vérifiée sur Maven et code/documentation officiels consultés. Paramètres de flux fixés et décrits dans `ARCHITECTURE.md` ; pas de keystore Android ni service distant utilisés pour ces sauvegardes par phrase secrète. Les tests de gros flux écrivent des fichiers temporaires, plutôt que des tableaux proportionnels à l’archive.
 
-Sources : [compatibilité Kotlin/AGP](https://developer.android.com/build/kotlin-support), [Room](https://developer.android.com/jetpack/androidx/releases/room), [reconnaissance de texte embarquée](https://developers.google.com/ml-kit/vision/text-recognition/v2/android).
+Sources : [compatibilité Kotlin/AGP](https://developer.android.com/build/kotlin-support), [Room](https://developer.android.com/jetpack/androidx/releases/room), [Tesseract4Android 4.9.0](https://github.com/adaptech-cz/Tesseract4Android/blob/4.9.0/README.md). La variante OCR mono-thread limite les ressources et conserve une instance par extraction ; les trois modèles `tessdata_fast` sont épinglés au commit `87416418657359cb625c412a48b6e1d6d41c29bd`, embarqués et vérifiés par SHA-256 avant utilisation. JitPack est restreint au seul groupe de cette dépendance. Aucune dépendance ML Kit ni Google Play Services dans l’application actuelle. Voir `THIRD_PARTY_NOTICES.md`.
 
 Installer JDK 17 et Android SDK 36, accepter les licences. Définir `ANDROID_HOME` ou un `local.properties` ignoré contenant `sdk.dir=/chemin/sdk`. Puis :
 
@@ -30,6 +30,12 @@ Le cas de 90 Mo ne doit pas charger toute l’archive en mémoire. Le script d�
 La dernière commande nécessite un émulateur/appareil démarré. Les tests Compose supposent une installation sans dossier préexistant. Les tests d’intégration utilisent des bases et répertoires dédiés pour sauvegarde/restauration et OCR synthétique. Une réinstallation de l’app de test ne garantit pas que le dossier de l’app cible est vide ; utiliser un émulateur de test dédié.
 
 ## Restauration après désinstallation réelle
+
+### Suite complète et code appareil réel
+
+Après compilation des APK debug/tests, `bash tools/verify-device-suite.sh emulator-5554 --wipe-test-app` exécute toute la suite Android et conserve son journal dans `artifacts/verification`. Ce script refuse les AVD non réservés et les API autres que 26, désinstalle **uniquement l’application de test**, configure temporairement un PIN synthétique public, vérifie les résultats du runner (y compris les tests ignorés) et retire son PIN en sortie. Ne jamais l’utiliser sur un téléphone ou un AVD personnel. Une credential préexistante empêche la configuration sans son ancien secret ; ne pas contourner cette protection.
+
+Le test de credential confirme une annulation puis une authentification par Android, et le retour d’un vrai sélecteur SAF après import d’un PNG synthétique sous verrouillage. Le test de parcours général injecte les réponses de sélecteurs pour les fichiers synthétiques, tout en utilisant les contrats, écrans et services applicatifs réels. La biométrie physique et le chemin BiometricPrompt API 30+ restent distincts et doivent être déclarés non testés en l’absence d’appareil approprié.
 
 Le script suivant est destructif **pour les données Equily du seul émulateur de test choisi**, jamais pour un téléphone physique. Il refuse les AVD autres que `equily-api26` et `equily-clean-restore`. Ne pas y conserver de dossier personnel. Construire préalablement les APK debug et de tests, arrêter toute autre instrumentation, puis :
 

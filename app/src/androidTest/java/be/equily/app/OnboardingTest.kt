@@ -3,16 +3,22 @@ package be.equily.app
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.withLock
 import org.junit.Rule
 import org.junit.Test
 
 class OnboardingTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     @Test fun onboardAndRecordMortgageOffline() {
+        val model = ViewModelProvider(compose.activity)[EquilyModel::class.java]
+        compose.waitUntil(60000) { model.ready.value && model.preferencesReady.value }
+        runBlocking { model.repository.mutex.withLock { model.repository.database.records().clear() } }
+        try {
         compose.waitUntil(30000) { compose.onAllNodesWithText("Enregistrer").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Enregistrer").performScrollTo().performClick()
-        compose.waitUntil(30000) { compose.onAllNodesWithText("Ajouter une dépense").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Ajouter une dépense").performScrollTo().performClick()
+        compose.waitUntil(30000) { compose.onAllNodesWithContentDescription("Ajouter une dépense").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithContentDescription("Ajouter une dépense").performClick()
         try {
             compose.waitUntil(30000) { compose.onAllNodesWithText("Description").fetchSemanticsNodes().isNotEmpty() }
         } catch (failure: ComposeTimeoutException) {
@@ -20,7 +26,6 @@ class OnboardingTest {
         }
         compose.onNodeWithText("Description").performTextInput("Crédit hypothécaire")
         compose.onNodeWithText("Montant (€)").performTextInput("1070,00")
-        val model = ViewModelProvider(compose.activity)[EquilyModel::class.java]
         compose.runOnIdle { model.locked.value = true }
         compose.waitUntil(30000) { compose.onAllNodesWithText("Déverrouiller").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Description").assertDoesNotExist()
@@ -47,5 +52,9 @@ class OnboardingTest {
         compose.waitUntil(30000) { compose.onAllNodesWithText("Créer une sauvegarde").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Phrase secrète (12 caractères minimum)").assert(SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.InputText, androidx.compose.ui.text.AnnotatedString("synthetic test passphrase")))
         compose.onNodeWithText("Phrase secrète (12 caractères minimum)").performTextClearance()
+        } finally {
+            runBlocking { model.repository.mutex.withLock { model.repository.database.records().clear() } }
+            compose.waitForIdle()
+        }
     }
 }

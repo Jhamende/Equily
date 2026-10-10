@@ -1,0 +1,14 @@
+Equily — composants redistribués sans modification
+
+Tesseract4Android 4.9.0 : Apache License 2.0.
+Tesseract 5.5.1 et modèles tessdata_fast : Apache License 2.0.
+Leptonica 1.85.0 : licence BSD fournie dans le fichier adjacent.
+libjpeg 9f : licence Independent JPEG Group fournie dans le README adjacent.
+libpng 1.6.48 : licence libpng fournie dans le fichier adjacent.
+
+AndroidX / Jetpack Compose / Room / DataStore / Navigation / Biometric : Apache License 2.0.
+Tink 1.21.0 : Apache License 2.0.
+PDFBox Android 2.0.27.0 / Apache PDFBox : Apache License 2.0.
+
+Source et versions : https://github.com/Jhamende/Equily
+Les textes Apache License 2.0 sont inclus dans les fichiers de licence Tesseract adjacents.

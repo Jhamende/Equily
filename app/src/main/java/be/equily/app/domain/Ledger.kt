@@ -23,6 +23,9 @@ data class Charge(
     val dueDate: LocalDate? = null,
     val ruleId: String? = null,
     val archived: Boolean = false,
+    val supplier: String = "",
+    val invoiceNumber: String = "",
+    val invoiceReference: String = "",
 ) {
     init { require(cents in 1..MAX_CENTS); require(selfBasisPoints in 0..10000) }
 }
@@ -50,7 +53,7 @@ data class Movement(
             PaymentKind.TRANSFER -> require(source in listOf(Party.SELF, Party.OTHER) && destination in listOf(Party.SELF, Party.OTHER) && source != destination)
             PaymentKind.CONTRIBUTION -> require(source in listOf(Party.SELF, Party.OTHER) && destination == Party.SHARED && chargeId == null && allocations.isEmpty())
             PaymentKind.REFUND -> require((chargeId != null || allocations.isNotEmpty()) && destination != Party.UNKNOWN)
-            PaymentKind.CREDIT -> require((chargeId != null || allocations.isNotEmpty()) && destination != Party.UNKNOWN)
+            PaymentKind.CREDIT -> require(destination != Party.UNKNOWN)
         }
     }
     fun expanded(): List<Movement> = if (allocations.isEmpty()) listOf(this) else allocations.map { (expenseId, amount) -> copy(id = "$id:$expenseId", cents = amount, chargeId = expenseId, allocations = emptyMap()) }
@@ -99,6 +102,7 @@ object Ledger {
         val active = charges.filter { it.status != EntryStatus.DRAFT }
         val activeIds = active.map { it.id }.toSet()
         val included = movements.flatMap { it.expanded() }.filter { it.chargeId == null || it.chargeId in activeIds }
+        val byCharge = included.groupBy { it.chargeId }
         var selfShare = 0L
         var otherShare = 0L
         var paid = 0L
@@ -106,7 +110,7 @@ object Ledger {
         var balance = 0L
         var qualified = false
         for (charge in active) {
-            val related = included.filter { it.chargeId == charge.id }
+            val related = byCharge[charge.id].orEmpty()
             val credits = related.filter { it.kind in listOf(PaymentKind.REFUND, PaymentKind.CREDIT) }.sumOf { it.cents }
             require(credits <= charge.cents) { "Credits exceed charge" }
             val allocation = Money.split(charge.cents - credits, charge.selfBasisPoints)
@@ -180,6 +184,8 @@ data class RecurringRule(
     }
     fun generate(until: LocalDate, existingIds: Set<String>): List<Charge> {
         if ((paused && pauses.isEmpty()) || until < first) return emptyList()
+        val through = minOf(until, end ?: until)
+        require(java.time.temporal.ChronoUnit.MONTHS.between(YearMonth.from(first), YearMonth.from(through)) < 12000) { "Recurrence exceeds 1000 years" }
         val generated = mutableListOf<Charge>()
         var offset = 0L
         while (true) {

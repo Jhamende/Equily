@@ -1,4 +1,35 @@
 <resources>
+    <string name="unallocated">Niet toegewezen aan een uitgave</string>
+    <string name="credit_help">Een niet-toegewezen krediet wijzigt de verdeling of het saldo tussen personen niet. Terugbetalingen van het ziekenfonds, kinderbijslag en andere kredieten verminderen een uitgave alleen na uw expliciete toewijzing.</string>
+    <string name="home">Start</string>
+    <string name="not_established">Betaling niet vastgesteld (concept, betwisting of onvolledige bron)</string>
+    <string name="scan_resume">Deze niet-opgeslagen scan is onderbroken door een herstart van de app. Importeer het origineel opnieuw voordat u een factuur opslaat.</string>
+    <string name="initialization_failed">Dossier niet beschikbaar</string>
+    <string name="initialization_help">Het lokale dossier kon niet worden geopend. Er zijn geen gegevens verwijderd. Controleer vrije opslagruimte, herstart de telefoon en bewaar uw back-ups voordat u de app verwijdert.</string>
+    <string name="retry">Opnieuw proberen</string>
+    <string name="passphrase_resume">De wachtzin wordt nooit bewaard na het opnieuw aanmaken van het scherm. Voer deze opnieuw in om de bewerking op het geselecteerde bestand te voltooien.</string>
+    <string name="resume_operation">Wachtende bewerking voltooien</string>
+    <string name="shared_cash">Bekende gezamenlijke kasstroom (cumulatief)</string>
+    <string name="transfers_sent">Verzonden overschrijvingen deze maand</string>
+    <string name="transfers_received">Ontvangen overschrijvingen deze maand</string>
+    <string name="children_other">Kinderen: overige</string>
+    <string name="financial">Financiële kosten</string>
+    <string name="initial_payment">Reeds betaald bedrag (leeg = totaal)</string>
+    <string name="lock_setup">Stel een Android-schermvergrendeling in via de systeeminstellingen en keer terug om Equily te ontgrendelen.</string>
+    <string name="end_recurring">Deze herhaling beëindigen</string>
+    <string name="zoom_in">Inzoomen</string>
+    <string name="zoom_out">Uitzoomen</string>
+    <string name="settlement_status">Betalingsstatus</string>
+    <string name="invoice_supplier">Leverancier (optioneel)</string>
+    <string name="invoice_number">Factuurnummer (optioneel)</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nee</string>
+    <string name="report_scope">Uitgaven worden geselecteerd op uitgavendatum, inclusief latere toegewezen betalingen. Niet-toegewezen overschrijvingen zijn beperkt tot de periode. Het beginsaldo is uitgesloten van dit perioderapport.</string>
+    <string name="dossier">Mijn dossier</string>
+    <string name="categories">Categorieën aanpassen</string>
+    <string name="category_name">Categorienaam</string>
+    <string name="new_category">Categorie toevoegen met deze naam</string>
+    <string name="category_help">Hernoem categorieën of voeg ze toe. Archiveren verbergt een categorie in nieuwe formulieren zonder historische uitgaven te wijzigen.</string>
     <string name="anchor_day">Vervaldag (leeg = startdag)</string>
     <string name="recurring_revision_help">Een herziening wijzigt reeds aangemaakte kosten niet. Kies een datum na hun laatste vervaldatum. Pauzeren slaat toekomstige kosten over tot de hervatting, zonder bestaande uitgaven te verwijderen.</string>
     <string name="multiple_allocations">Verdeel deze betaling over uitgaven (som moet gelijk zijn aan bedrag)</string>
@@ -17,7 +48,7 @@
     <string name="save">Opslaan</string>
     <string name="cancel">Annuleren</string>
     <string name="dashboard">Overzicht</string>
-    <string name="history">Geschiedenis</string>
+    <string name="history">Historiek</string>
     <string name="recurring">Terugkerend</string>
     <string name="settings">Instellingen</string>
     <string name="add_expense">Uitgave toevoegen</string>
@@ -118,8 +149,8 @@
     <string name="success">Bewerking voltooid.</string>
     <string name="error">Kan niet voltooien. Controleer velden, bestand, beschikbare ruimte of wachtzin.</string>
     <string name="working">Lokale verwerking…</string>
-    <string name="previous">Vorige maand</string>
-    <string name="next">Volgende maand</string>
+    <string name="previous">Vorige</string>
+    <string name="next">Volgende</string>
     <string name="back">Terug</string>
     <string name="general">Algemeen</string>
     <string name="medical">Medisch</string>
@@ -135,4 +166,5 @@
     <string name="utilities">Nutsvoorzieningen</string>
     <string name="occupancy">Bezettingsvergoeding</string>
     <string name="duplicate">Origineel al aanwezig: controleer op een dubbele uitgave.</string>
+    <string name="licenses">Licenties</string>
 </resources>
