@@ -4,6 +4,8 @@ Application Android native pour suivre localement les dépenses partagées aprè
 
 **État : développement, pas encore une release acceptée.** Les exigences de référence sont dans `EQUILY_CODEX_PROMPT.md`. Voir `PROGRESS.md` pour les validations et les écarts. Ne pas présenter les déclarations comme des dettes reconnues juridiquement ou validées par l’autre personne.
 
+Validation locale : 38 tests unitaires et 18 tests Android réussis ensemble sur API 26, scénario complet hors ligne et restauration après désinstallation réelle. FR/NL/EN et clair/sombre vérifiés sur téléphone, tablette et police agrandie. Les limites d'appareil physique/accessibilité et les autorisations de publication restent explicites dans `ACCEPTANCE.md`.
+
 ## Utilisation
 
 Créer un dossier sans compte, indiquer éventuellement les alias/enfants et un solde initial. Ajouter une dépense, préciser son partage, puis enregistrer séparément les paiements et remboursements. Une facture n’est jamais une preuve de paiement. Les montants contestés sont isolés du solde financé entre personnes. Les dépenses impayées restent visibles comme échéances fournisseurs.

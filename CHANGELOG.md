@@ -20,4 +20,4 @@
 - Validation sans mutation des fichiers malformés, des données de démarrage et des règles hors capacité ; réessai après erreur sans effacement du dossier.
 - Restauration vérifiée après désinstallation réelle et réinstallation sur émulateur API 26, archive retenue hors app puis dossier synthétique et réouverture persistante vérifiés. Résultats et échecs intermédiaires dans `PROGRESS.md`.
 
-Cette liste décrit le code présent, pas une validation du scénario complet ni une publication. Aucun tag public ou APK de release accepté à ce stade.
+Le scénario complet hors ligne, les 18 tests Android ensemble et la restauration après désinstallation réelle sont réussis sur émulateur API 26. Trois variantes d'affichage FR/NL/EN et clair/sombre sont vérifiées. Ce n'est pas une publication ni une validation sur appareil physique ; aucun tag public ou release acceptée à ce stade. Preuves et limites dans `PROGRESS.md`.
